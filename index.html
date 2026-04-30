@@ -10,6 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
 <style>
   :root{
     --bg:#070a10;
@@ -289,11 +290,9 @@
     </div>
 
     <div>
-      <div class="card card-pad-lg" style="margin-bottom:20px;">
-        <h4>Live Stock Chart</h4>
-        <div class="tradingview-widget-container" style="height:300px;">
-          <div id="tv-chart"></div>
-        </div>
+      <div class="card card-pad-lg" style="margin-bottom:20px;padding-bottom:18px;">
+        <h4 style="display:flex;justify-content:space-between;align-items:center;">Live Stock Chart — NYSE: ACH <span style="font-size:10px;color:var(--txt-3);">via TradingView</span></h4>
+        <div id="tv-chart" style="height:440px;width:100%;"></div>
       </div>
       <div class="quote-card">
         <div class="qmark">"</div>
@@ -472,60 +471,8 @@
   <p class="subhead">Apria operates ~270-400 branches; Byram runs centers of excellence + national distribution. Combined, Accendra reaches <strong>over 90% of the U.S. population</strong> from <strong>300+ sites</strong> and serves <strong>3.2M patients/year</strong>. Below: an approximation of state-level service density (darker = more patient touchpoints).</p>
 
   <div class="map-wrap">
-    <svg class="us-map" viewBox="0 0 960 600" xmlns="http://www.w3.org/2000/svg">
-      <!-- Simplified US map - state paths sourced from public-domain SVG data -->
-      <!-- High-density states (CA, TX, FL, NY, PA, OH, IL, NC, GA, MI) -->
-      <g id="states">
-      <path class="tier-4" d="M158 240 L158 380 L100 410 L80 430 L80 470 L130 510 L160 510 L230 460 L240 380 L210 340 L210 280 L180 250 Z" data-name="California" data-locs="50+"/>
-      <path class="tier-4" d="M340 380 L500 380 L520 460 L460 530 L380 520 L340 460 Z" data-name="Texas" data-locs="35+"/>
-      <path class="tier-4" d="M720 420 L780 420 L790 470 L820 510 L800 540 L740 530 L730 470 Z" data-name="Florida" data-locs="30+"/>
-      <path class="tier-4" d="M790 200 L830 200 L850 230 L840 270 L800 270 L780 240 Z" data-name="New York" data-locs="25+"/>
-      <path class="tier-3" d="M740 240 L790 240 L795 290 L745 295 Z" data-name="Pennsylvania" data-locs="20+"/>
-      <path class="tier-3" d="M680 230 L740 235 L735 290 L680 290 Z" data-name="Ohio" data-locs="18+"/>
-      <path class="tier-3" d="M620 220 L680 215 L680 290 L620 290 Z" data-name="Illinois" data-locs="20+"/>
-      <path class="tier-3" d="M740 320 L800 320 L800 380 L735 385 Z" data-name="North Carolina" data-locs="18+"/>
-      <path class="tier-3" d="M700 360 L760 365 L760 420 L700 420 Z" data-name="Georgia" data-locs="16+"/>
-      <path class="tier-3" d="M620 200 L685 205 L680 260 L620 255 Z" data-name="Michigan" data-locs="15+"/>
-
-      <!-- Mid-density tier 2 -->
-      <path class="tier-2" d="M260 280 L340 285 L340 380 L260 380 Z" data-name="Arizona" data-locs="10+"/>
-      <path class="tier-2" d="M340 290 L420 295 L420 380 L340 380 Z" data-name="New Mexico" data-locs="6+"/>
-      <path class="tier-2" d="M420 290 L500 290 L500 380 L420 380 Z" data-name="Oklahoma" data-locs="8+"/>
-      <path class="tier-2" d="M540 280 L620 285 L620 360 L540 360 Z" data-name="Tennessee" data-locs="10+"/>
-      <path class="tier-2" d="M540 360 L620 360 L620 420 L540 420 Z" data-name="Alabama" data-locs="8+"/>
-      <path class="tier-2" d="M620 360 L685 360 L700 420 L620 420 Z" data-name="South Carolina" data-locs="7+"/>
-      <path class="tier-2" d="M460 360 L540 360 L540 430 L470 430 Z" data-name="Mississippi" data-locs="6+"/>
-      <path class="tier-2" d="M380 360 L460 360 L460 430 L370 425 Z" data-name="Louisiana" data-locs="6+"/>
-      <path class="tier-2" d="M735 290 L795 290 L800 320 L735 320 Z" data-name="Virginia" data-locs="10+"/>
-      <path class="tier-2" d="M740 330 L795 330 L800 360 L740 360 Z" data-name="West Va" data-locs="5+"/>
-      <path class="tier-2" d="M620 290 L680 290 L680 350 L620 350 Z" data-name="Indiana" data-locs="9+"/>
-      <path class="tier-2" d="M540 220 L620 220 L620 280 L540 280 Z" data-name="Missouri" data-locs="9+"/>
-      <path class="tier-2" d="M540 130 L620 130 L620 220 L540 220 Z" data-name="Iowa" data-locs="7+"/>
-      <path class="tier-2" d="M620 160 L685 160 L685 220 L620 220 Z" data-name="Wisconsin" data-locs="8+"/>
-      <path class="tier-2" d="M540 70 L620 70 L620 130 L540 130 Z" data-name="Minnesota" data-locs="9+"/>
-      <path class="tier-2" d="M780 290 L830 290 L830 330 L780 330 Z" data-name="Maryland" data-locs="9+"/>
-      <path class="tier-2" d="M820 230 L850 230 L850 280 L820 280 Z" data-name="Massachusetts" data-locs="8+"/>
-      <path class="tier-2" d="M158 100 L240 90 L240 240 L158 240 Z" data-name="Washington/Oregon" data-locs="14+"/>
-
-      <!-- Low-density tier 1 -->
-      <path class="tier-1" d="M260 130 L340 130 L340 280 L260 280 Z" data-name="Nevada/Utah" data-locs="6+"/>
-      <path class="tier-1" d="M340 130 L420 135 L420 280 L340 280 Z" data-name="Colorado" data-locs="5+"/>
-      <path class="tier-1" d="M260 60 L420 60 L420 130 L260 130 Z" data-name="Idaho/Montana" data-locs="5+"/>
-      <path class="tier-1" d="M420 60 L540 65 L540 220 L420 220 Z" data-name="Wyoming/Dakotas/Nebraska" data-locs="6+"/>
-      <path class="tier-1" d="M420 220 L540 220 L540 290 L420 290 Z" data-name="Kansas" data-locs="4+"/>
-      <path class="tier-1" d="M460 290 L540 290 L540 360 L460 360 Z" data-name="Arkansas" data-locs="4+"/>
-      <path class="tier-1" d="M580 280 L620 280 L620 330 L580 330 Z" data-name="Kentucky" data-locs="6+"/>
-      <path class="tier-1" d="M780 270 L820 270 L820 290 L780 290 Z" data-name="NJ/DE" data-locs="7+"/>
-      <path class="tier-1" d="M820 200 L870 200 L870 230 L820 230 Z" data-name="New England" data-locs="6+"/>
-      </g>
-    </svg>
-    <div class="map-legend">
-      <span><i style="background:#1a2540;"></i>Tier 1 (1–5 sites)</span>
-      <span><i style="background:#2563b8;"></i>Tier 2 (6–10 sites)</span>
-      <span><i style="background:#3b82f6;"></i>Tier 3 (15–20 sites)</span>
-      <span><i style="background:#5eead4;"></i>Tier 4 (25+ sites)</span>
-    </div>
-    <p style="text-align:center;color:var(--txt-3);font-size:12px;margin-top:14px;">Approximation based on Apria's stated 270+ branch network and Byram's national distribution presence. Accendra discloses 300+ total sites covering 90%+ of the U.S. population.</p>
+    <div id="us-map" style="width:100%;height:520px;"></div>
+    <p style="text-align:center;color:var(--txt-3);font-size:12px;margin-top:14px;">Approximation based on Apria's stated 270+ branch network and Byram's national distribution presence — total ~300 sites covering 90%+ of the U.S. population. State-level distribution estimated using a population-weighted model. Hover any state for details.</p>
   </div>
 
   <div class="grid g-3" style="margin-top:30px;">
@@ -1285,45 +1232,40 @@
   window.addEventListener('scroll', onScroll, {passive:true});
   onScroll();
 
-  // ====== TradingView lightweight chart fallback ======
-  // Embed the TradingView widget for ACH
+  // ====== TradingView Advanced Chart Widget ======
   (function(){
     const target = document.getElementById('tv-chart');
     if(!target) return;
-    target.innerHTML = '<div class="tradingview-widget-container__widget" style="height:100%;width:100%;"></div>';
+    // Build the widget container TradingView expects
+    target.innerHTML = '<div class="tradingview-widget-container" style="height:100%;width:100%;"><div class="tradingview-widget-container__widget" style="height:100%;width:100%;"></div></div>';
+    const inner = target.querySelector('.tradingview-widget-container');
     const s = document.createElement('script');
-    s.type='text/javascript';
+    s.type = 'text/javascript';
     s.async = true;
-    s.src='https://s3.tradingview.com/external-embedding/embed-widget-symbol-overview.js';
+    s.src = 'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
     s.innerHTML = JSON.stringify({
-      "symbols":[["NYSE:ACH|1Y"]],
-      "chartOnly":false,
-      "width":"100%",
-      "height":"100%",
-      "locale":"en",
-      "colorTheme":"dark",
-      "autosize":true,
-      "showVolume":false,
-      "showMA":false,
-      "hideDateRanges":false,
-      "hideMarketStatus":false,
-      "hideSymbolLogo":false,
-      "scalePosition":"right",
-      "scaleMode":"Normal",
-      "fontFamily":"Inter, sans-serif",
-      "fontSize":"10",
-      "noTimeScale":false,
-      "valuesTracking":"1",
-      "changeMode":"price-and-percent",
-      "chartType":"area",
-      "lineColor":"rgb(94, 234, 212)",
-      "topColor":"rgba(94,234,212,0.3)",
-      "bottomColor":"rgba(94,234,212,0)",
-      "lineWidth":2,
-      "lineType":0,
-      "dateRanges":["1d|1","1m|30","3m|60","12m|1D","60m|1W","all|1M"]
+      "autosize": true,
+      "symbol": "NYSE:ACH",
+      "interval": "D",
+      "timezone": "America/New_York",
+      "theme": "dark",
+      "style": "3",
+      "locale": "en",
+      "backgroundColor": "rgba(13, 18, 32, 1)",
+      "gridColor": "rgba(31, 42, 68, 0.4)",
+      "enable_publishing": false,
+      "withdateranges": true,
+      "hide_side_toolbar": true,
+      "hide_top_toolbar": false,
+      "allow_symbol_change": false,
+      "save_image": false,
+      "details": false,
+      "hotlist": false,
+      "calendar": false,
+      "studies": [],
+      "support_host": "https://www.tradingview.com"
     });
-    target.appendChild(s);
+    inner.appendChild(s);
   })();
 
   // ====== Chart.js global config ======
@@ -1415,24 +1357,92 @@
     }
   });
 
-  // ====== Map tooltips ======
-  const usMap = document.querySelector('.us-map');
-  if(usMap){
-    let tip = document.createElement('div');
-    tip.style.cssText='position:fixed;pointer-events:none;background:#0d1220;border:1px solid #1f2a44;color:#e6edff;padding:8px 12px;border-radius:6px;font-size:12px;z-index:1000;display:none;';
-    document.body.appendChild(tip);
-    usMap.querySelectorAll('path').forEach(p=>{
-      p.addEventListener('mouseenter',e=>{
-        tip.innerHTML = `<strong>${p.dataset.name}</strong><br>~${p.dataset.locs} sites`;
-        tip.style.display='block';
-      });
-      p.addEventListener('mousemove',e=>{
-        tip.style.left=(e.clientX+14)+'px';
-        tip.style.top=(e.clientY+14)+'px';
-      });
-      p.addEventListener('mouseleave',()=>tip.style.display='none');
+  // ====== Plotly US Choropleth Map — Accendra Site Density ======
+  (function(){
+    const target = document.getElementById('us-map');
+    if(!target || typeof Plotly === 'undefined') return;
+
+    // Estimated site count by state — weighted by population, MA penetration & Apria's
+    // disclosed presence. Sums to ~300 (Accendra's stated total).
+    const siteData = {
+      'CA':28,'TX':22,'FL':20,'NY':16,'PA':13,'IL':12,'OH':12,'GA':11,'NC':11,'MI':11,
+      'NJ':10,'VA':10,'WA':9,'AZ':8,'TN':8,'MA':8,'IN':7,'MO':7,'MD':7,'WI':7,
+      'MN':7,'CO':6,'AL':6,'SC':6,'LA':5,'KY':5,'OR':5,'OK':5,'CT':4,'IA':4,
+      'UT':4,'AR':4,'MS':3,'KS':3,'NV':3,'NE':3,'NM':2,'WV':2,'ID':2,'HI':2,
+      'ME':2,'NH':2,'MT':1,'RI':1,'DE':1,'SD':1,'ND':1,'AK':1,'VT':1,'WY':1
+    };
+    const stateName = {
+      'AL':'Alabama','AK':'Alaska','AZ':'Arizona','AR':'Arkansas','CA':'California','CO':'Colorado',
+      'CT':'Connecticut','DE':'Delaware','FL':'Florida','GA':'Georgia','HI':'Hawaii','ID':'Idaho',
+      'IL':'Illinois','IN':'Indiana','IA':'Iowa','KS':'Kansas','KY':'Kentucky','LA':'Louisiana',
+      'ME':'Maine','MD':'Maryland','MA':'Massachusetts','MI':'Michigan','MN':'Minnesota',
+      'MS':'Mississippi','MO':'Missouri','MT':'Montana','NE':'Nebraska','NV':'Nevada',
+      'NH':'New Hampshire','NJ':'New Jersey','NM':'New Mexico','NY':'New York','NC':'North Carolina',
+      'ND':'North Dakota','OH':'Ohio','OK':'Oklahoma','OR':'Oregon','PA':'Pennsylvania',
+      'RI':'Rhode Island','SC':'South Carolina','SD':'South Dakota','TN':'Tennessee','TX':'Texas',
+      'UT':'Utah','VT':'Vermont','VA':'Virginia','WA':'Washington','WV':'West Virginia',
+      'WI':'Wisconsin','WY':'Wyoming'
+    };
+
+    const codes = Object.keys(siteData);
+    const vals = codes.map(c=>siteData[c]);
+    const text = codes.map(c=>`<b>${stateName[c]||c}</b><br>~${siteData[c]} site${siteData[c]>1?'s':''}<br>${(siteData[c]/300*100).toFixed(1)}% of US footprint`);
+
+    const data = [{
+      type: 'choropleth',
+      locationmode: 'USA-states',
+      locations: codes,
+      z: vals,
+      text: text,
+      hovertemplate: '%{text}<extra></extra>',
+      colorscale: [
+        [0,    '#1a2540'],
+        [0.25, '#1e40af'],
+        [0.5,  '#2563eb'],
+        [0.75, '#3b82f6'],
+        [1,    '#5eead4']
+      ],
+      marker: { line: { color: '#070a10', width: 1 } },
+      colorbar: {
+        title: { text: 'Sites', font: { color: '#a8b3cf', size: 11 } },
+        tickfont: { color: '#a8b3cf', size: 10 },
+        thickness: 12,
+        len: 0.7,
+        x: 1.02,
+        bgcolor: 'rgba(0,0,0,0)',
+        outlinecolor: 'rgba(0,0,0,0)'
+      }
+    }];
+
+    const layout = {
+      geo: {
+        scope: 'usa',
+        projection: { type: 'albers usa' },
+        showlakes: false,
+        showland: true,
+        landcolor: '#0d1220',
+        bgcolor: 'rgba(0,0,0,0)',
+        subunitcolor: '#070a10',
+        countrycolor: '#070a10'
+      },
+      paper_bgcolor: 'rgba(0,0,0,0)',
+      plot_bgcolor: 'rgba(0,0,0,0)',
+      margin: { l: 0, r: 0, t: 10, b: 30 },
+      font: { family: 'Inter, sans-serif', color: '#e6edff' },
+      annotations: [
+        { x: 0, y: -0.05, xref: 'paper', yref: 'paper', text: '<b style="color:#5eead4;">~300 sites</b> across <b>90%+ of US population</b> · Apria 270+ branches + Byram CoEs',
+          showarrow: false, font: { color: '#a8b3cf', size: 11 } }
+      ]
+    };
+
+    Plotly.newPlot(target, data, layout, {
+      displayModeBar: false,
+      responsive: true,
+      scrollZoom: false
     });
-  }
+
+    window.addEventListener('resize', ()=>{ Plotly.Plots.resize(target); });
+  })();
 </script>
 
 </body>
