@@ -1,0 +1,1439 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Accendra Health (ACH) — First Principles Research Dashboard</title>
+<meta name="description" content="Deep-dive interactive research dashboard on Accendra Health (NYSE: ACH) — pure-play home-based care platform after the Owens & Minor divestiture.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<style>
+  :root{
+    --bg:#070a10;
+    --bg-1:#0d1220;
+    --bg-2:#121a2c;
+    --bg-3:#1a2540;
+    --line:#1f2a44;
+    --line-2:#2a3a5e;
+    --txt:#e6edff;
+    --txt-2:#a8b3cf;
+    --txt-3:#6f7fa6;
+    --acc:#5eead4;        /* mint */
+    --acc-2:#38bdf8;      /* sky */
+    --acc-3:#a78bfa;      /* violet */
+    --bull:#22c55e;
+    --bear:#ef4444;
+    --warn:#f59e0b;
+    --gold:#facc15;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);font-family:'Inter',system-ui,sans-serif;font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased;}
+  body{background:radial-gradient(1200px 600px at 80% -10%, rgba(94,234,212,.08), transparent 60%), radial-gradient(900px 500px at 0% 30%, rgba(167,139,250,.06), transparent 60%), var(--bg);}
+  a{color:var(--acc-2);text-decoration:none;}
+  a:hover{text-decoration:underline;}
+  code,.mono{font-family:'JetBrains Mono',monospace;font-size:.92em;}
+
+  /* ========= NAV ========= */
+  .nav{position:sticky;top:0;z-index:80;background:rgba(7,10,16,.86);backdrop-filter:blur(14px);border-bottom:1px solid var(--line);}
+  .nav-inner{max-width:1320px;margin:0 auto;padding:14px 28px;display:flex;align-items:center;gap:24px;}
+  .logo{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.5px;font-size:18px;}
+  .logo-dot{width:10px;height:10px;border-radius:50%;background:linear-gradient(135deg,var(--acc),var(--acc-2));box-shadow:0 0 12px var(--acc);}
+  .nav-links{display:flex;gap:6px;flex-wrap:wrap;font-size:13px;flex:1;justify-content:center;}
+  .nav-links a{color:var(--txt-2);padding:6px 11px;border-radius:6px;transition:all .15s;text-decoration:none;}
+  .nav-links a:hover{color:var(--txt);background:var(--bg-2);}
+  .nav-links a.active{color:var(--acc);background:rgba(94,234,212,.08);}
+  .nav-tag{font-size:11px;padding:4px 10px;border:1px solid var(--line-2);border-radius:99px;color:var(--txt-3);}
+  .nav-tag .live{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--bull);box-shadow:0 0 8px var(--bull);margin-right:6px;animation:pulse 2s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+
+  /* ========= LAYOUT ========= */
+  section{max-width:1320px;margin:0 auto;padding:80px 28px;scroll-margin-top:80px;}
+  section h2{font-size:34px;font-weight:800;margin:0 0 8px;letter-spacing:-.5px;}
+  section h2 .num{color:var(--acc);font-family:'JetBrains Mono',monospace;font-size:18px;margin-right:14px;font-weight:600;letter-spacing:0;}
+  section .subhead{color:var(--txt-2);font-size:16px;margin-bottom:36px;max-width:820px;}
+  h3{font-size:20px;font-weight:700;margin:24px 0 12px;}
+  h4{font-size:15px;font-weight:700;margin:18px 0 8px;color:var(--acc);text-transform:uppercase;letter-spacing:1px;}
+  p{margin:8px 0;color:var(--txt-2);}
+  p strong, li strong{color:var(--txt);font-weight:600;}
+  ul{padding-left:20px;}
+  ul li{margin:6px 0;color:var(--txt-2);}
+
+  .card{background:linear-gradient(180deg,rgba(18,26,44,.85), rgba(13,18,32,.85));border:1px solid var(--line);border-radius:14px;padding:22px;}
+  .card-pad-lg{padding:28px;}
+  .grid{display:grid;gap:22px;}
+  .g-2{grid-template-columns:1fr 1fr;}
+  .g-3{grid-template-columns:repeat(3,1fr);}
+  .g-4{grid-template-columns:repeat(4,1fr);}
+  @media (max-width:900px){.g-2,.g-3,.g-4{grid-template-columns:1fr;}.nav-links{display:none;}}
+
+  /* ========= HERO ========= */
+  .hero{padding:80px 28px 40px;}
+  .hero-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:44px;align-items:flex-start;}
+  @media (max-width:1100px){.hero-grid{grid-template-columns:1fr;}}
+  .hero-tag{display:inline-block;font-size:12px;padding:5px 12px;border:1px solid var(--acc);color:var(--acc);border-radius:99px;font-weight:600;margin-bottom:18px;}
+  .hero h1{font-size:54px;line-height:1.05;margin:0 0 12px;font-weight:800;letter-spacing:-1.5px;}
+  .hero h1 .grad{background:linear-gradient(135deg,var(--acc) 0%,var(--acc-2) 50%,var(--acc-3) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+  .hero p.lede{font-size:18px;color:var(--txt-2);max-width:680px;margin-bottom:28px;}
+  .hero-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:24px 0 28px;}
+  .stat{padding:18px;background:var(--bg-2);border:1px solid var(--line);border-radius:12px;}
+  .stat-l{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--txt-3);font-weight:600;}
+  .stat-v{font-size:26px;font-weight:800;margin-top:6px;}
+  .stat-v.bull{color:var(--bull);}
+  .stat-v.bear{color:var(--bear);}
+  .stat-d{font-size:11px;color:var(--txt-3);margin-top:4px;}
+
+  .quote-card{background:linear-gradient(135deg,rgba(94,234,212,.08),rgba(56,189,248,.04));border:1px solid var(--line-2);border-radius:14px;padding:24px;}
+  .quote-card .qmark{font-size:54px;line-height:0;color:var(--acc);font-family:Georgia, serif;}
+  .quote-card blockquote{margin:8px 0 0;font-size:15px;color:var(--txt);font-style:italic;}
+  .quote-card cite{display:block;margin-top:14px;color:var(--txt-3);font-size:13px;font-style:normal;}
+
+  /* ========= KPI BAR ========= */
+  .kpi-bar{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-top:18px;}
+  @media (max-width:900px){.kpi-bar{grid-template-columns:repeat(2,1fr);}}
+  .kpi{padding:14px;background:var(--bg-2);border:1px solid var(--line);border-radius:10px;text-align:left;}
+  .kpi-l{font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:var(--txt-3);}
+  .kpi-v{font-size:22px;font-weight:800;margin-top:4px;}
+  .kpi-v small{font-size:12px;color:var(--txt-3);font-weight:500;}
+
+  /* ========= TIMELINE ========= */
+  .timeline{position:relative;padding:20px 0 0 30px;}
+  .timeline::before{content:"";position:absolute;left:8px;top:0;bottom:0;width:2px;background:var(--line-2);}
+  .tl-item{position:relative;margin-bottom:28px;padding-left:18px;}
+  .tl-item::before{content:"";position:absolute;left:-29px;top:5px;width:14px;height:14px;border-radius:50%;background:var(--bg);border:2px solid var(--acc);}
+  .tl-item.bull::before{border-color:var(--bull);}
+  .tl-item.bear::before{border-color:var(--bear);}
+  .tl-item.warn::before{border-color:var(--warn);}
+  .tl-date{font-size:12px;color:var(--acc);font-weight:600;font-family:'JetBrains Mono',monospace;}
+  .tl-title{font-size:16px;font-weight:700;margin:4px 0;}
+  .tl-body{color:var(--txt-2);font-size:14px;}
+
+  /* ========= BULL/BEAR ========= */
+  .bb-tabs{display:flex;gap:0;border-bottom:1px solid var(--line);margin-bottom:24px;}
+  .bb-tab{padding:14px 22px;background:transparent;border:none;color:var(--txt-2);font-size:15px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;font-family:inherit;}
+  .bb-tab.active{color:var(--acc);border-bottom-color:var(--acc);}
+  .bb-tab.bull.active{color:var(--bull);border-bottom-color:var(--bull);}
+  .bb-tab.bear.active{color:var(--bear);border-bottom-color:var(--bear);}
+  .bb-content{display:none;}
+  .bb-content.active{display:block;animation:fadeIn .3s;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+  .bb-card{background:var(--bg-2);border:1px solid var(--line);border-radius:12px;padding:20px;margin-bottom:14px;}
+  .bb-card.bull{border-left:3px solid var(--bull);}
+  .bb-card.bear{border-left:3px solid var(--bear);}
+  .bb-card h4{margin-top:0;color:var(--txt);font-size:16px;text-transform:none;letter-spacing:0;}
+  .bb-card.bull h4::before{content:"▲";color:var(--bull);margin-right:8px;}
+  .bb-card.bear h4::before{content:"▼";color:var(--bear);margin-right:8px;}
+
+  /* ========= TABLES ========= */
+  table.fin{width:100%;border-collapse:collapse;font-size:13px;}
+  table.fin th,table.fin td{padding:10px 12px;text-align:right;border-bottom:1px solid var(--line);}
+  table.fin th{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--txt-3);font-weight:600;}
+  table.fin td:first-child,table.fin th:first-child{text-align:left;color:var(--txt);}
+  table.fin tbody tr:hover{background:rgba(94,234,212,.03);}
+  table.fin .tr-hdr td{background:var(--bg-2);font-weight:700;color:var(--acc);font-size:12px;text-transform:uppercase;letter-spacing:1px;}
+  table.fin .tr-tot td{border-top:1px solid var(--line-2);font-weight:700;color:var(--txt);}
+  table.fin tr.fcst td{color:var(--acc-2);}
+
+  /* ========= MAP ========= */
+  .map-wrap{background:var(--bg-1);border:1px solid var(--line);border-radius:14px;padding:20px;}
+  .us-map{width:100%;height:auto;}
+  .us-map path{fill:#1a2540;stroke:#0d1220;stroke-width:1;transition:all .2s;}
+  .us-map path:hover{fill:var(--acc-2);}
+  .us-map path.tier-1{fill:#1e3a5f;}
+  .us-map path.tier-2{fill:#2563b8;}
+  .us-map path.tier-3{fill:#3b82f6;}
+  .us-map path.tier-4{fill:#5eead4;}
+  .map-legend{display:flex;justify-content:center;gap:20px;margin-top:16px;flex-wrap:wrap;}
+  .map-legend span{font-size:12px;color:var(--txt-2);display:flex;align-items:center;gap:6px;}
+  .map-legend i{width:14px;height:14px;border-radius:3px;display:inline-block;}
+
+  /* ========= CHART CONTAINERS ========= */
+  .chart-wrap{position:relative;height:340px;}
+  .chart-wrap-tall{position:relative;height:420px;}
+  .chart-wrap-sm{position:relative;height:240px;}
+
+  /* ========= MISC ========= */
+  .pill{display:inline-block;padding:3px 10px;font-size:11px;border-radius:99px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;}
+  .pill.bull{background:rgba(34,197,94,.12);color:var(--bull);border:1px solid rgba(34,197,94,.3);}
+  .pill.bear{background:rgba(239,68,68,.12);color:var(--bear);border:1px solid rgba(239,68,68,.3);}
+  .pill.warn{background:rgba(245,158,11,.12);color:var(--warn);border:1px solid rgba(245,158,11,.3);}
+  .pill.acc{background:rgba(94,234,212,.10);color:var(--acc);border:1px solid rgba(94,234,212,.3);}
+
+  .tag-row{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0;}
+
+  .footer{padding:30px 28px;text-align:center;color:var(--txt-3);font-size:12px;border-top:1px solid var(--line);max-width:1320px;margin:60px auto 0;}
+  .footer a{color:var(--acc);}
+
+  .hl{color:var(--acc);font-weight:600;}
+  .hl-y{color:var(--gold);font-weight:600;}
+  .hl-r{color:var(--bear);font-weight:600;}
+  .hl-g{color:var(--bull);font-weight:600;}
+
+  /* primer cards */
+  .primer-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
+  @media (max-width:1000px){.primer-grid{grid-template-columns:1fr;}}
+  .primer{padding:22px;background:var(--bg-2);border:1px solid var(--line);border-radius:12px;border-top:3px solid var(--acc);}
+  .primer .num{font-size:42px;font-weight:800;color:var(--acc);font-family:'JetBrains Mono',monospace;line-height:1;}
+  .primer h4{margin:8px 0 12px;color:var(--txt);text-transform:none;letter-spacing:0;font-size:17px;}
+
+  /* product breakdown */
+  .prod-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--line);}
+  .prod-row:last-child{border-bottom:0;}
+  .prod-name{font-weight:600;}
+  .prod-bar{width:55%;height:8px;background:var(--bg-2);border-radius:99px;overflow:hidden;}
+  .prod-bar > i{display:block;height:100%;background:linear-gradient(90deg,var(--acc),var(--acc-2));border-radius:99px;}
+  .prod-pct{font-family:'JetBrains Mono',monospace;font-weight:600;color:var(--acc);min-width:60px;text-align:right;}
+
+  /* debt wall */
+  .debt-wall{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:20px;align-items:end;height:340px;}
+  .debt-bar-wrap{display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:8px;}
+  .debt-bar{width:100%;border-radius:6px 6px 0 0;display:flex;flex-direction:column;justify-content:flex-start;padding:10px 8px;font-size:12px;color:var(--bg);font-weight:700;text-align:center;position:relative;}
+  .debt-yr{font-size:13px;font-weight:700;color:var(--txt);}
+  .debt-amt{font-size:11px;color:var(--txt-3);font-family:'JetBrains Mono',monospace;}
+
+  /* moat scoring */
+  .moat-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+  @media (max-width:900px){.moat-grid{grid-template-columns:1fr;}}
+  .moat-item{display:flex;align-items:flex-start;gap:14px;padding:16px;background:var(--bg-2);border:1px solid var(--line);border-radius:10px;}
+  .moat-rank{font-family:'JetBrains Mono',monospace;font-weight:800;font-size:24px;color:var(--acc);min-width:50px;}
+  .moat-rank.weak{color:var(--bear);}
+
+  /* scenarios */
+  .scen-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
+  @media (max-width:1000px){.scen-grid{grid-template-columns:1fr;}}
+  .scen{padding:22px;border-radius:14px;background:var(--bg-2);border:1px solid var(--line);text-align:center;}
+  .scen.bull{border-top:3px solid var(--bull);}
+  .scen.base{border-top:3px solid var(--acc);}
+  .scen.bear{border-top:3px solid var(--bear);}
+  .scen .label{font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--txt-3);}
+  .scen .pt{font-size:42px;font-weight:800;margin:8px 0;}
+  .scen.bull .pt{color:var(--bull);}
+  .scen.base .pt{color:var(--acc);}
+  .scen.bear .pt{color:var(--bear);}
+  .scen .upd{font-size:14px;font-weight:600;}
+  .scen ul{text-align:left;font-size:13px;margin-top:14px;padding-left:18px;}
+
+  /* expert quotes */
+  .exp{padding:18px;background:var(--bg-2);border:1px solid var(--line);border-radius:10px;border-left:3px solid var(--acc-3);margin-bottom:14px;}
+  .exp-q{font-style:italic;color:var(--txt);margin-bottom:8px;}
+  .exp-cite{font-size:12px;color:var(--txt-3);}
+
+  /* legend dots */
+  .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle;}
+
+  /* tabs */
+  .tabs{display:flex;gap:0;border-bottom:1px solid var(--line);}
+  .tab-btn{padding:12px 18px;background:transparent;border:none;color:var(--txt-2);font-weight:600;font-size:14px;cursor:pointer;border-bottom:2px solid transparent;font-family:inherit;}
+  .tab-btn.active{color:var(--acc);border-bottom-color:var(--acc);}
+  .tab-pane{display:none;padding-top:20px;}
+  .tab-pane.active{display:block;animation:fadeIn .3s;}
+
+  .pmix-row{display:grid;grid-template-columns:1.2fr 2.5fr 1fr;gap:14px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px;}
+  .pmix-bar{height:18px;background:var(--bg-2);border-radius:99px;overflow:hidden;}
+  .pmix-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--acc-3),var(--acc-2));}
+
+  /* glow accent panels */
+  .panel-glow{background:linear-gradient(180deg,rgba(94,234,212,.04),rgba(56,189,248,.02));border:1px solid var(--line-2);border-radius:14px;padding:24px;}
+</style>
+</head>
+<body>
+
+<!-- ============== NAV ============== -->
+<header class="nav">
+  <div class="nav-inner">
+    <div class="logo"><span class="logo-dot"></span> ACCENDRA / ACH</div>
+    <nav class="nav-links" id="navlinks">
+      <a href="#hero">Snapshot</a>
+      <a href="#primer">Primer</a>
+      <a href="#business">Business</a>
+      <a href="#footprint">Footprint</a>
+      <a href="#products">Products</a>
+      <a href="#moat">Moat</a>
+      <a href="#financials">Financials</a>
+      <a href="#capital">Capital</a>
+      <a href="#valuation">Valuation</a>
+      <a href="#bull-bear">Bull / Bear</a>
+      <a href="#risks">Risks</a>
+      <a href="#catalysts">Catalysts</a>
+    </nav>
+    <span class="nav-tag"><span class="live"></span>NYSE: ACH</span>
+  </div>
+</header>
+
+<!-- ============== HERO ============== -->
+<section id="hero" class="hero">
+  <div class="hero-grid">
+    <div>
+      <span class="hero-tag">DEEP-VALUE TURNAROUND · POST-DIVESTITURE PURE-PLAY</span>
+      <h1>Accendra Health.<br><span class="grad">A 140-year-old hospital distributor reborn as a $2.7B home-based care platform.</span></h1>
+      <p class="lede">Formerly <strong>Owens & Minor</strong>, the company sold its $8B legacy hospital-supply business to Platinum Equity on Dec 31, 2025 and now trades as <strong>NYSE: ACH</strong>. What's left is a focused durable-medical-equipment (DME) and patient-direct platform serving <strong>3.2M Americans</strong> with diabetes, sleep apnea, COPD, ostomy, urology and wound-care needs through <strong>Apria</strong> and <strong>Byram</strong>. Stock is down ~95% from peak, priced for bankruptcy that the math says won't happen.</p>
+
+      <div class="hero-stats">
+        <div class="stat"><div class="stat-l">Share Price</div><div class="stat-v" id="c-price">$3.68</div><div class="stat-d">52w: $1.84 – $9.55</div></div>
+        <div class="stat"><div class="stat-l">Market Cap</div><div class="stat-v" id="c-mcap">$281M</div><div class="stat-d">Down ~95% from peak</div></div>
+        <div class="stat"><div class="stat-l">Enterprise Value</div><div class="stat-v" id="c-ev">$2.13B</div><div class="stat-d">~6.0x EV/EBITDA '25</div></div>
+        <div class="stat"><div class="stat-l">DV Capital PT</div><div class="stat-v bull" id="c-pt">$13.50</div><div class="stat-d">+267% upside (2027)</div></div>
+      </div>
+
+      <div class="kpi-bar">
+        <div class="kpi"><div class="kpi-l">Active Patients</div><div class="kpi-v" id="c-pat">3.2M</div></div>
+        <div class="kpi"><div class="kpi-l">Sites</div><div class="kpi-v" id="c-sites">300+</div></div>
+        <div class="kpi"><div class="kpi-l">Covered Lives</div><div class="kpi-v" id="c-cov">290M</div></div>
+        <div class="kpi"><div class="kpi-l">FY25 Revenue</div><div class="kpi-v" id="c-rev">$2.76B</div></div>
+        <div class="kpi"><div class="kpi-l">Net Debt</div><div class="kpi-v" id="c-debt">$1.77B</div></div>
+        <div class="kpi"><div class="kpi-l">FY26E Lev.</div><div class="kpi-v" id="c-lev">5.1x</div></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card card-pad-lg" style="margin-bottom:20px;">
+        <h4>Live Stock Chart</h4>
+        <div class="tradingview-widget-container" style="height:300px;">
+          <div id="tv-chart"></div>
+        </div>
+      </div>
+      <div class="quote-card">
+        <div class="qmark">"</div>
+        <blockquote>The market believes Accendra will go bankrupt in the next few years. They will not. The balance sheet is tight, but it is workable, and the company has the time it needs to execute. When that reality sets in, things could move very quickly.</blockquote>
+        <cite>— DeepValue Capital, Initial Thesis (Jan 8, 2026)</cite>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid g-3" style="margin-top:36px;">
+    <div class="card"><h4>The Setup</h4><p>Stripped of $8B in low-margin hospital distribution, ACH is now a <span class="hl">$2.7B revenue</span>, <span class="hl">~13% EBITDA margin</span> home-care pure-play. Trades at <span class="hl-y">~6x EV/EBITDA</span> while peers fetch <span class="hl-g">9–12x</span>.</p></div>
+    <div class="card"><h4>Why It's Cheap</h4><p>Net leverage <span class="hl-r">5.1x</span>; March 2027 debt wall ($529M); $300M lost contract; CMS competitive bidding; GLP-1 threat to CPAP. Market prices in an existential outcome.</p></div>
+    <div class="card"><h4>Why It's Mispriced</h4><p>Divestiture proceeds + $282M cash + restored revolver + retained NOLs + ~$100M FCF guide all line up to clear 2026/27 maturities and re-rate the equity if execution holds.</p></div>
+  </div>
+</section>
+
+<!-- ============== PRIMER ============== -->
+<section id="primer">
+  <h2><span class="num">01</span>The First-Principles Primer</h2>
+  <p class="subhead">Before any financial analysis: what is the home-based DME business, what is "Patient Direct", and how does Accendra make money? If you've never thought about how the CPAP machine in your uncle's bedroom got billed, start here.</p>
+
+  <div class="primer-grid">
+    <div class="primer">
+      <div class="num">01</div>
+      <h4>What is "DME"?</h4>
+      <p><strong>Durable Medical Equipment</strong> = physical medical gear that's prescribed for use at home and lasts more than 3 years. Think: CPAP machines, oxygen concentrators, hospital beds, wheelchairs, insulin pumps, glucose monitors, ostomy bags, catheters, wound-care supplies.</p>
+      <p>The U.S. DME market is <span class="hl">~$70B and growing 6% per year</span>, with specialized home-care sub-segments expanding 10–12% as care shifts out of hospitals.</p>
+    </div>
+    <div class="primer">
+      <div class="num">02</div>
+      <h4>Who's in the Loop?</h4>
+      <p>It's a four-sided market. (1) <strong>Manufacturer</strong> (ResMed, Philips, Dexcom, Abbott) makes the device. (2) <strong>Doctor</strong> writes a prescription. (3) <strong>DME provider</strong> (Accendra) fulfils it — delivers gear, sets it up, supplies consumables, handles compliance. (4) <strong>Payer</strong> (Medicare, Medicaid, commercial insurer) reimburses.</p>
+      <p>Patients almost never choose. <span class="hl-y">The DME provider is picked by the doctor's referral or the payer's network.</span></p>
+    </div>
+    <div class="primer">
+      <div class="num">03</div>
+      <h4>How Does Accendra Bill?</h4>
+      <p><strong>Fee-for-service:</strong> Bill the payer per episode of care — equipment rental, monthly resupplies, setup visits. Each chronic patient is a recurring annuity.</p>
+      <p><strong>Capitation:</strong> A health plan pays a fixed $/member/month to handle <em>all</em> DME needs of a patient pool. Lower margin but more predictable. The contract Accendra just lost was a capitation deal worth $300M of revenue.</p>
+    </div>
+    <div class="primer">
+      <div class="num">04</div>
+      <h4>Why "Recurring Revenue"?</h4>
+      <p>Diabetes, sleep apnea, COPD, ostomy — these don't go away. <span class="hl">85% of Accendra's annual revenue comes from existing patients</span> who reorder month after month, year after year. CPAP supplies (mask, hose, filter) refresh every 90 days. Insulin pump supplies every 30 days. Once a patient is on Accendra's books, they stay for years.</p>
+      <p>This is the closest thing to a SaaS-like model in healthcare distribution.</p>
+    </div>
+    <div class="primer">
+      <div class="num">05</div>
+      <h4>Razor & Blades</h4>
+      <p>Apria's CPAP and respiratory business is a classic razor/blades model. The <strong>device</strong> (CPAP, ventilator, oxygen concentrator) is rented to the patient — modest margins. The <strong>consumables</strong> (masks, tubing, filters, oxygen) reorder for years — high margins.</p>
+      <p>This is why GLP-1 drugs that "cure" sleep apnea threaten the model: shorter therapy = fewer reorders.</p>
+    </div>
+    <div class="primer">
+      <div class="num">06</div>
+      <h4>Why the Industry Is Hard</h4>
+      <p>Three structural challenges:</p>
+      <ul style="margin:0;">
+        <li><strong>Reimbursement complexity</strong>: 650+ contracts, every payer has different rules, denials and audits routine.</li>
+        <li><strong>Regulatory:</strong> CMS DMEPOS Competitive Bidding can slash rates 50% on a category overnight.</li>
+        <li><strong>Capital intensive:</strong> $160-170M of capex/year goes into rented patient equipment.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card card-pad-lg" style="margin-top:36px;">
+    <h3 style="margin-top:0;">A Day in the Life of an Accendra Revenue Dollar</h3>
+    <div class="grid g-4">
+      <div>
+        <h4>Step 1 — Referral</h4>
+        <p>A pulmonologist at a hospital diagnoses moderate-to-severe sleep apnea. The discharge planner needs to send the patient home with a CPAP. They call Apria — a "national preferred provider" in the hospital's network.</p>
+      </div>
+      <div>
+        <h4>Step 2 — Verify</h4>
+        <p>Apria's automated payor qualification system runs the patient's insurance in seconds. Coverage confirmed. A respiratory therapist is dispatched to the patient's home with the prescribed AirSense 11.</p>
+      </div>
+      <div>
+        <h4>Step 3 — Setup & Bill</h4>
+        <p>Therapist sets up the device, fits the mask, walks through compliance. Apria bills the payer for the device rental + setup visit. Patient enrolls in monthly resupply program.</p>
+      </div>
+      <div>
+        <h4>Step 4 — Recurring</h4>
+        <p>Mask + hose + filter ship every 90 days. Compliance is monitored remotely (CMS requires usage data). My Apria app pings the patient. Revenue stream lives 5+ years if the patient sticks.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============== BUSINESS MODEL ============== -->
+<section id="business">
+  <h2><span class="num">02</span>The Business Model</h2>
+  <p class="subhead">Two go-to-market brands, one operational backbone. After the divestiture, every revenue dollar flows through one of two engines: Apria (high-touch device & respiratory) or Byram (e-commerce style chronic-care consumables).</p>
+
+  <div class="grid g-2">
+    <div class="card card-pad-lg">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+        <span class="dot" style="background:var(--acc-2);width:14px;height:14px;"></span>
+        <h3 style="margin:0;">Apria — The Respiratory & Sleep Specialist</h3>
+      </div>
+      <p>Acquired in 2022 for <strong>$1.57B</strong>. Generates the majority of Accendra's revenue. National leader in three clinical categories:</p>
+      <ul>
+        <li><strong>Sleep Therapy:</strong> CPAP and BiPAP. ~$737M revenue (27% of total). Razor/blades model — device rental + 90-day mask/hose resupply.</li>
+        <li><strong>Home Respiratory:</strong> Stationary & portable oxygen, non-invasive ventilation (NIV) for COPD. ~$440M (16%).</li>
+        <li><strong>Negative Pressure Wound Therapy:</strong> National scale provider.</li>
+      </ul>
+      <p><strong>The differentiator:</strong> A network of <strong>in-home respiratory therapists</strong> who actually visit patients to set up gear, train them, and monitor compliance. This is the moat — commoditized fulfillment houses don't have boots on the ground. Hospital discharge planners pick Apria because they don't want a delayed discharge or a re-admission.</p>
+      <div class="tag-row">
+        <span class="pill acc">CPAP / BiPAP</span><span class="pill acc">Oxygen</span><span class="pill acc">NIV</span><span class="pill acc">In-Home RT Network</span>
+      </div>
+    </div>
+
+    <div class="card card-pad-lg">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+        <span class="dot" style="background:var(--acc);width:14px;height:14px;"></span>
+        <h3 style="margin:0;">Byram — The Chronic-Care E-Commerce Engine</h3>
+      </div>
+      <p>Acquired in 2017 for <strong>$380M</strong> at 10.6x EBITDA. Operates like a healthcare-specific Amazon for recurring chronic-care supplies. Almost all revenue is repeat orders by patients managing lifelong conditions.</p>
+      <ul>
+        <li><strong>Diabetes:</strong> ~$796M (29% of total). Insulin pumps, continuous glucose monitors (CGMs), test strips. Largest category.</li>
+        <li><strong>Ostomy:</strong> ~$204M (7%). Permanent need post-surgery.</li>
+        <li><strong>Urology:</strong> ~$116M (4%). Catheters and supplies.</li>
+        <li><strong>Wound Care:</strong> ~$190M (7%).</li>
+      </ul>
+      <p><strong>The reach:</strong> Byram services <strong>85% of U.S. covered lives</strong> with <strong>650+ payer contracts</strong> and thousands of plan types. <span class="hl">ByramConnect</span> — an AI-powered patient platform — aggregates data from CGMs, blood-pressure monitors, fitness trackers and feeds insights back to care teams. Sticky.</p>
+      <div class="tag-row">
+        <span class="pill acc">CGMs</span><span class="pill acc">Insulin Pumps</span><span class="pill acc">Ostomy</span><span class="pill acc">ByramConnect AI</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card card-pad-lg" style="margin-top:24px;">
+    <h3 style="margin-top:0;">Cross-Sell: The Hidden Synergy</h3>
+    <p>Apria and Byram's patient populations have <strong>massive clinical overlap</strong>:</p>
+    <div class="grid g-3" style="margin:16px 0;">
+      <div style="text-align:center;padding:18px;background:var(--bg-2);border-radius:10px;">
+        <div style="font-size:42px;font-weight:800;color:var(--acc);">~50%</div>
+        <div style="color:var(--txt-2);font-size:13px;">of Type 2 diabetics have sleep apnea</div>
+      </div>
+      <div style="text-align:center;padding:18px;background:var(--bg-2);border-radius:10px;">
+        <div style="font-size:42px;font-weight:800;color:var(--acc);">~80%</div>
+        <div style="color:var(--txt-2);font-size:13px;">of clinically obese have sleep apnea</div>
+      </div>
+      <div style="text-align:center;padding:18px;background:var(--bg-2);border-radius:10px;">
+        <div style="font-size:42px;font-weight:800;color:var(--acc);">85%</div>
+        <div style="color:var(--txt-2);font-size:13px;">of revenue is from existing patients</div>
+      </div>
+    </div>
+    <p>A Byram diabetes patient is a high-probability future Apria CPAP patient. An Apria CPAP patient is a likely future Byram diabetic. <strong>Single-source cross-sell drives wallet share without rising customer-acquisition cost.</strong> Hospital discharge planners increasingly demand single-source vendors — Accendra is one of the few that can cover the full home-care continuum.</p>
+  </div>
+
+  <div class="grid g-2" style="margin-top:24px;">
+    <div class="card">
+      <h4>Revenue Recognition</h4>
+      <p>Two contract types:</p>
+      <ul>
+        <li><strong>Fee-for-service (~majority):</strong> Bill payer per episode. Revenue recognized at expected reimbursement (not list price).</li>
+        <li><strong>Capitation:</strong> Fixed $/patient/month — Accendra takes utilization risk. Lower margin, more predictable.</li>
+      </ul>
+      <p>Cash conversion: working-capital intensive. <span class="hl-y">DSO of 12–20 days</span>, but denial rates and audit recoupments make collections messy.</p>
+    </div>
+    <div class="card">
+      <h4>Cost Structure</h4>
+      <ul>
+        <li><strong>COGS ~53%:</strong> Cost of devices, consumables, freight.</li>
+        <li><strong>SG&A ~37%:</strong> Distribution centers (300+), respiratory therapists, billing/claims operations, IT.</li>
+        <li><strong>Capex ~$160-170M/yr:</strong> Mostly rented patient equipment (CPAPs, oxygen concentrators, NIV).</li>
+        <li><strong>D&A ~5% of rev:</strong> Heavy because of equipment fleet.</li>
+      </ul>
+      <p>Operating leverage is moderate — fixed costs (rent, IT, billing ops) ~25% of total. <span class="hl">Each 100 bps of EBITDA margin = ~$26M of additional EBITDA, ~$0.24 EPS.</span></p>
+    </div>
+  </div>
+</section>
+
+<!-- ============== FOOTPRINT ============== -->
+<section id="footprint">
+  <h2><span class="num">03</span>The National Footprint</h2>
+  <p class="subhead">Apria operates ~270-400 branches; Byram runs centers of excellence + national distribution. Combined, Accendra reaches <strong>over 90% of the U.S. population</strong> from <strong>300+ sites</strong> and serves <strong>3.2M patients/year</strong>. Below: an approximation of state-level service density (darker = more patient touchpoints).</p>
+
+  <div class="map-wrap">
+    <svg class="us-map" viewBox="0 0 960 600" xmlns="http://www.w3.org/2000/svg">
+      <!-- Simplified US map - state paths sourced from public-domain SVG data -->
+      <!-- High-density states (CA, TX, FL, NY, PA, OH, IL, NC, GA, MI) -->
+      <g id="states">
+      <path class="tier-4" d="M158 240 L158 380 L100 410 L80 430 L80 470 L130 510 L160 510 L230 460 L240 380 L210 340 L210 280 L180 250 Z" data-name="California" data-locs="50+"/>
+      <path class="tier-4" d="M340 380 L500 380 L520 460 L460 530 L380 520 L340 460 Z" data-name="Texas" data-locs="35+"/>
+      <path class="tier-4" d="M720 420 L780 420 L790 470 L820 510 L800 540 L740 530 L730 470 Z" data-name="Florida" data-locs="30+"/>
+      <path class="tier-4" d="M790 200 L830 200 L850 230 L840 270 L800 270 L780 240 Z" data-name="New York" data-locs="25+"/>
+      <path class="tier-3" d="M740 240 L790 240 L795 290 L745 295 Z" data-name="Pennsylvania" data-locs="20+"/>
+      <path class="tier-3" d="M680 230 L740 235 L735 290 L680 290 Z" data-name="Ohio" data-locs="18+"/>
+      <path class="tier-3" d="M620 220 L680 215 L680 290 L620 290 Z" data-name="Illinois" data-locs="20+"/>
+      <path class="tier-3" d="M740 320 L800 320 L800 380 L735 385 Z" data-name="North Carolina" data-locs="18+"/>
+      <path class="tier-3" d="M700 360 L760 365 L760 420 L700 420 Z" data-name="Georgia" data-locs="16+"/>
+      <path class="tier-3" d="M620 200 L685 205 L680 260 L620 255 Z" data-name="Michigan" data-locs="15+"/>
+
+      <!-- Mid-density tier 2 -->
+      <path class="tier-2" d="M260 280 L340 285 L340 380 L260 380 Z" data-name="Arizona" data-locs="10+"/>
+      <path class="tier-2" d="M340 290 L420 295 L420 380 L340 380 Z" data-name="New Mexico" data-locs="6+"/>
+      <path class="tier-2" d="M420 290 L500 290 L500 380 L420 380 Z" data-name="Oklahoma" data-locs="8+"/>
+      <path class="tier-2" d="M540 280 L620 285 L620 360 L540 360 Z" data-name="Tennessee" data-locs="10+"/>
+      <path class="tier-2" d="M540 360 L620 360 L620 420 L540 420 Z" data-name="Alabama" data-locs="8+"/>
+      <path class="tier-2" d="M620 360 L685 360 L700 420 L620 420 Z" data-name="South Carolina" data-locs="7+"/>
+      <path class="tier-2" d="M460 360 L540 360 L540 430 L470 430 Z" data-name="Mississippi" data-locs="6+"/>
+      <path class="tier-2" d="M380 360 L460 360 L460 430 L370 425 Z" data-name="Louisiana" data-locs="6+"/>
+      <path class="tier-2" d="M735 290 L795 290 L800 320 L735 320 Z" data-name="Virginia" data-locs="10+"/>
+      <path class="tier-2" d="M740 330 L795 330 L800 360 L740 360 Z" data-name="West Va" data-locs="5+"/>
+      <path class="tier-2" d="M620 290 L680 290 L680 350 L620 350 Z" data-name="Indiana" data-locs="9+"/>
+      <path class="tier-2" d="M540 220 L620 220 L620 280 L540 280 Z" data-name="Missouri" data-locs="9+"/>
+      <path class="tier-2" d="M540 130 L620 130 L620 220 L540 220 Z" data-name="Iowa" data-locs="7+"/>
+      <path class="tier-2" d="M620 160 L685 160 L685 220 L620 220 Z" data-name="Wisconsin" data-locs="8+"/>
+      <path class="tier-2" d="M540 70 L620 70 L620 130 L540 130 Z" data-name="Minnesota" data-locs="9+"/>
+      <path class="tier-2" d="M780 290 L830 290 L830 330 L780 330 Z" data-name="Maryland" data-locs="9+"/>
+      <path class="tier-2" d="M820 230 L850 230 L850 280 L820 280 Z" data-name="Massachusetts" data-locs="8+"/>
+      <path class="tier-2" d="M158 100 L240 90 L240 240 L158 240 Z" data-name="Washington/Oregon" data-locs="14+"/>
+
+      <!-- Low-density tier 1 -->
+      <path class="tier-1" d="M260 130 L340 130 L340 280 L260 280 Z" data-name="Nevada/Utah" data-locs="6+"/>
+      <path class="tier-1" d="M340 130 L420 135 L420 280 L340 280 Z" data-name="Colorado" data-locs="5+"/>
+      <path class="tier-1" d="M260 60 L420 60 L420 130 L260 130 Z" data-name="Idaho/Montana" data-locs="5+"/>
+      <path class="tier-1" d="M420 60 L540 65 L540 220 L420 220 Z" data-name="Wyoming/Dakotas/Nebraska" data-locs="6+"/>
+      <path class="tier-1" d="M420 220 L540 220 L540 290 L420 290 Z" data-name="Kansas" data-locs="4+"/>
+      <path class="tier-1" d="M460 290 L540 290 L540 360 L460 360 Z" data-name="Arkansas" data-locs="4+"/>
+      <path class="tier-1" d="M580 280 L620 280 L620 330 L580 330 Z" data-name="Kentucky" data-locs="6+"/>
+      <path class="tier-1" d="M780 270 L820 270 L820 290 L780 290 Z" data-name="NJ/DE" data-locs="7+"/>
+      <path class="tier-1" d="M820 200 L870 200 L870 230 L820 230 Z" data-name="New England" data-locs="6+"/>
+      </g>
+    </svg>
+    <div class="map-legend">
+      <span><i style="background:#1a2540;"></i>Tier 1 (1–5 sites)</span>
+      <span><i style="background:#2563b8;"></i>Tier 2 (6–10 sites)</span>
+      <span><i style="background:#3b82f6;"></i>Tier 3 (15–20 sites)</span>
+      <span><i style="background:#5eead4;"></i>Tier 4 (25+ sites)</span>
+    </div>
+    <p style="text-align:center;color:var(--txt-3);font-size:12px;margin-top:14px;">Approximation based on Apria's stated 270+ branch network and Byram's national distribution presence. Accendra discloses 300+ total sites covering 90%+ of the U.S. population.</p>
+  </div>
+
+  <div class="grid g-3" style="margin-top:30px;">
+    <div class="card">
+      <h4>Operating Backbone</h4>
+      <ul>
+        <li><strong>Regional distribution centers</strong> with kitting & repair</li>
+        <li><strong>National pharmacy & biomedical center</strong> (Apria)</li>
+        <li><strong>Centers of Excellence</strong> per product category (Byram)</li>
+        <li><strong>Customer service & billing centers</strong> centralized</li>
+        <li><strong>~7,000 employees</strong> field + support</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>Scale Advantage in Numbers</h4>
+      <ul>
+        <li><strong>3.2M</strong> active patients</li>
+        <li><strong>290M</strong> covered lives accessible</li>
+        <li><strong>650+</strong> payer contracts (Byram)</li>
+        <li><strong>85%</strong> of US covered lives serviced</li>
+        <li><strong>90%+</strong> US population reach</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>Key Channel Endorsements</h4>
+      <ul>
+        <li><strong>Optum National Preferred DME</strong> (Apria + Byram)</li>
+        <li><strong>Elevance / Anthem National Preferred</strong> (Apria, 18 states)</li>
+        <li><strong>Multiple Medicare Advantage</strong> network preferred provider</li>
+        <li><strong>Three-year supply agreements</strong> common with IDNs</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============== PRODUCTS ============== -->
+<section id="products">
+  <h2><span class="num">04</span>Product Portfolio &amp; Revenue Mix</h2>
+  <p class="subhead">FY2025 revenue split by clinical category. Diabetes and Sleep Therapy combined are <strong>56% of revenue</strong> — these two engines drive the company. Note the shift away from Home Respiratory in 2026E (CMS rule + lost contract).</p>
+
+  <div class="grid g-2">
+    <div class="card card-pad-lg">
+      <h3 style="margin-top:0;">FY2025 Revenue by Category</h3>
+      <div class="prod-row"><span class="prod-name">Diabetes Supplies</span><div class="prod-bar"><i style="width:96%;background:linear-gradient(90deg,#5eead4,#38bdf8);"></i></div><span class="prod-pct">28.8%</span></div>
+      <div class="prod-row"><span class="prod-name">Sleep Therapy (CPAP)</span><div class="prod-bar"><i style="width:89%;background:linear-gradient(90deg,#5eead4,#38bdf8);"></i></div><span class="prod-pct">26.7%</span></div>
+      <div class="prod-row"><span class="prod-name">Home Respiratory</span><div class="prod-bar"><i style="width:53%;background:linear-gradient(90deg,#a78bfa,#38bdf8);"></i></div><span class="prod-pct">15.9%</span></div>
+      <div class="prod-row"><span class="prod-name">Other / Daily-Use</span><div class="prod-bar"><i style="width:35%;background:linear-gradient(90deg,#a78bfa,#5eead4);"></i></div><span class="prod-pct">10.4%</span></div>
+      <div class="prod-row"><span class="prod-name">Ostomy</span><div class="prod-bar"><i style="width:25%;background:linear-gradient(90deg,#a78bfa,#5eead4);"></i></div><span class="prod-pct">7.4%</span></div>
+      <div class="prod-row"><span class="prod-name">Wound Care</span><div class="prod-bar"><i style="width:23%;background:linear-gradient(90deg,#a78bfa,#5eead4);"></i></div><span class="prod-pct">6.9%</span></div>
+      <div class="prod-row"><span class="prod-name">Urology</span><div class="prod-bar"><i style="width:14%;background:linear-gradient(90deg,#a78bfa,#5eead4);"></i></div><span class="prod-pct">4.2%</span></div>
+      <p style="font-size:12px;color:var(--txt-3);margin-top:14px;">Note: Diabetes + Sleep + Respiratory = 71% of revenue and >85% of EBITDA. Margin profiles vary widely by category.</p>
+    </div>
+    <div class="card card-pad-lg">
+      <h3 style="margin-top:0;">Revenue Trajectory by Category</h3>
+      <div class="chart-wrap"><canvas id="cat-chart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="grid g-3" style="margin-top:24px;">
+    <div class="card">
+      <h4>Diabetes — Margin King</h4>
+      <p>$789M (FY24) → $796M (FY25) → $765M (FY26E from CGM channel shift). CGMs (Dexcom, Abbott) and insulin pumps (Tandem, Omnipod) are the workhorses. <span class="hl-y">Largest single threat: CMS adding CGMs to competitive bidding</span> with category reclassification to "frequent and substantial servicing" (monthly rental). New rates target Jan 2028.</p>
+    </div>
+    <div class="card">
+      <h4>Sleep Therapy — Cash Engine</h4>
+      <p>$694M → $737M → $705M (FY26E). Apria's flagship business and the segment GLP-1 drugs threaten. ResMed AirSense 11 + monthly mask resupply. <span class="hl-g">Bull view:</span> >50% of OSA patients still undiagnosed. <span class="hl-r">Bear view:</span> Tirzepatide cut new CPAP starts 83% in early data.</p>
+    </div>
+    <div class="card">
+      <h4>Respiratory — Under Pressure</h4>
+      <p>$443M → $440M → $380M (FY26E, -14%). CMS June 2025 rule tightened NIV qualifications for COPD (6-month initial coverage, stricter docs). The lost commercial-payer contract was concentrated here. <span class="hl-y">2027 should normalize.</span></p>
+    </div>
+  </div>
+</section>
+
+<!-- ============== MOAT ============== -->
+<section id="moat">
+  <h2><span class="num">05</span>Competitive Moat &amp; Position</h2>
+  <p class="subhead">AlphaSense scores Accendra at <strong>11.5/16 (72%) "Above Average"</strong> quality. The moat is real but narrower than peers like AdaptHealth (4.2M patients, $3.2B revenue, $1.8B mkt cap). Three pillars hold it up; three vulnerabilities threaten it.</p>
+
+  <div class="moat-grid">
+    <div class="moat-item"><div class="moat-rank">01</div><div><h4 style="margin:0 0 6px;color:var(--txt);text-transform:none;letter-spacing:0;">National Scale & Single-Source Capability</h4><p>One of only ~3 platforms (with AdaptHealth, Lincare) able to act as a national single-vendor for payers and IDNs across multiple chronic categories. Optum named Apria & Byram preferred DME providers. <span class="hl">Hospital discharge planners want one number to call</span>, not five.</p></div></div>
+
+    <div class="moat-item"><div class="moat-rank">02</div><div><h4 style="margin:0 0 6px;color:var(--txt);text-transform:none;letter-spacing:0;">Reimbursement & Payer Connectivity</h4><p>650+ payer contracts, services 85% of U.S. covered lives. <strong>Automated payor qualification</strong> systems cut order turnaround from <span class="hl-r">30–60 days</span> to <span class="hl-g">~7 days</span>. This is a tech-enabled compliance moat — the rules get harder every year, scaled players absorb cost better.</p></div></div>
+
+    <div class="moat-item"><div class="moat-rank">03</div><div><h4 style="margin:0 0 6px;color:var(--txt);text-transform:none;letter-spacing:0;">Recurring Revenue & Patient Stickiness</h4><p>85% of annual revenue from existing patients. CPAP supplies refresh every 90 days, insulin pump supplies every 30 days. Once a patient is set up at home, switching is a hassle they avoid. Apria's RT network adds clinical service that commoditized players can't match.</p></div></div>
+
+    <div class="moat-item"><div class="moat-rank">04</div><div><h4 style="margin:0 0 6px;color:var(--txt);text-transform:none;letter-spacing:0;">Technology Stack — ByramConnect & My Apria</h4><p>ByramConnect is an AI-powered patient platform aggregating CGM, BP-cuff, fitness data and feeding it back to care teams (population-level reporting). My Apria patient app launches Q2 2026 to drive CPAP adherence. Both serve as <strong>integration moats with payers and providers</strong>.</p></div></div>
+
+    <div class="moat-item"><div class="moat-rank weak">!1</div><div><h4 style="margin:0 0 6px;color:var(--txt);text-transform:none;letter-spacing:0;">Supplier Concentration</h4><p>Top 3 manufacturers account for <span class="hl-r">~40% of equipment & supply purchases</span>. ResMed, Dexcom, etc., have leverage. Limits Accendra's ability to absorb manufacturer cost increases — and 2026 EBITDA guide explicitly cites manufacturer cost inflation as a margin headwind.</p></div></div>
+
+    <div class="moat-item"><div class="moat-rank weak">!2</div><div><h4 style="margin:0 0 6px;color:var(--txt);text-transform:none;letter-spacing:0;">Locked Out of Acute Care</h4><p>By divesting hospital distribution, Accendra <strong>loses the bundle</strong>. Mega-distributors Medline, Cardinal, McKesson use comprehensive prime-vendor agreements with hospitals to push their own private-label home-care products through. Former O&M GVP: this is the biggest long-term risk.</p></div></div>
+
+    <div class="moat-item"><div class="moat-rank weak">!3</div><div><h4 style="margin:0 0 6px;color:var(--txt);text-transform:none;letter-spacing:0;">Pricing Power Limited</h4><p>~45% of revenue is government-funded (Medicare + Medicaid + MA). 2026 CMS competitive bidding adds CGMs/pumps to bid categories with target Jan 2028 rates. Prior bidding rounds cut some category rates ~50%. Margins ~10% vs high-teens for diversified peers.</p></div></div>
+
+    <div class="moat-item"><div class="moat-rank weak">!4</div><div><h4 style="margin:0 0 6px;color:var(--txt);text-transform:none;letter-spacing:0;">GLP-1 Disruption Risk to CPAP</h4><p>Sleep apnea = 27% of revenue. Tirzepatide FDA-approved for OSA Dec 2024. Komodo Health data: tirzepatide patients started CPAP 83% less than non-GLP-1 patients. Even if mainstream adoption is 5+ years out, it shortens the duration of the high-margin resupply annuity.</p></div></div>
+  </div>
+
+  <div class="card card-pad-lg" style="margin-top:30px;">
+    <h3 style="margin-top:0;">How ACH Compares to Peers</h3>
+    <div style="overflow-x:auto;">
+    <table class="fin">
+      <thead><tr><th>Company</th><th>Mkt Cap</th><th>Revenue</th><th>Patients</th><th>EV/EBITDA</th><th>Net Lev.</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td><strong style="color:var(--acc);">Accendra (ACH)</strong></td><td>$281M</td><td>$2.76B</td><td>3.2M</td><td>~6.0x</td><td>5.1x</td><td>Pure-play home, post-divestiture</td></tr>
+        <tr><td>AdaptHealth (AHCO)</td><td>$1.8B</td><td>$3.24B</td><td>4.2M</td><td>~7.5x</td><td>3.5x</td><td>Closest peer, exclusive Kaiser DME</td></tr>
+        <tr><td>Quipt Home Medical</td><td>$140M</td><td>$248M</td><td>~340k</td><td>~5.0x</td><td>2.5x</td><td>Smaller respiratory focus</td></tr>
+        <tr><td>Medline (private)</td><td>~$30B est</td><td>~$25B</td><td>n/a</td><td>n/a</td><td>n/a</td><td>Mega-distributor, expanding home</td></tr>
+        <tr><td>Cardinal Health</td><td>~$32B</td><td>~$220B</td><td>n/a</td><td>~12x</td><td>1.8x</td><td>Diversified, IG credit</td></tr>
+        <tr><td>McKesson</td><td>~$80B</td><td>~$320B</td><td>n/a</td><td>~13x</td><td>1.5x</td><td>Diversified, IG credit</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p style="font-size:12px;color:var(--txt-3);margin-top:12px;">EV/EBITDA on TTM basis. Mega-distributors are not direct peers but compete in home-care end-markets. Pure-play home-care peer set (ACH, AHCO, Quipt) trades at 5.0–7.5x EV/EBITDA — below the 9–12x AlphaSense cites for "scaled platform-ready home health assets."</p>
+  </div>
+</section>
+
+<!-- ============== INDUSTRY DYNAMICS ============== -->
+<section id="industry">
+  <h2><span class="num">06</span>Industry Tailwinds &amp; Crosswinds</h2>
+  <p class="subhead">Two forces pull Accendra's market upward; two structural headwinds threaten unit economics. Understanding both is essential to underwriting the thesis.</p>
+
+  <div class="grid g-2">
+    <div class="card card-pad-lg" style="border-left:3px solid var(--bull);">
+      <h3 style="color:var(--bull);margin-top:0;">▲ Tailwind 1: Demographic Wave</h3>
+      <ul>
+        <li><strong>71M Americans</strong> will be 65+ by 2030 (1 in 5)</li>
+        <li><strong>40% of U.S. adults</strong> live with ≥1 chronic condition</li>
+        <li><strong>12% of U.S. adults</strong> have ≥5 chronic conditions</li>
+        <li><strong>37M+ diagnosed diabetics</strong> + 96M prediabetics</li>
+        <li><strong>5 of top-10 causes of death</strong> are preventable/treatable chronic disease</li>
+      </ul>
+      <p>Chronic patients = recurring revenue. Aging = volume growth. Math compounds.</p>
+    </div>
+    <div class="card card-pad-lg" style="border-left:3px solid var(--bull);">
+      <h3 style="color:var(--bull);margin-top:0;">▲ Tailwind 2: Site-of-Care Shift</h3>
+      <ul>
+        <li>Home care is <strong>30–50% cheaper</strong> than hospital/SNF</li>
+        <li>Payers & MA plans <strong>actively incentivize</strong> home-based care</li>
+        <li>Home-care market growing <strong>10–12% annually</strong> (specialty)</li>
+        <li>DME market: <strong>$70B → ~$94B by 2030</strong> (6% CAGR)</li>
+        <li>CMS frees hospital capacity for acute cases</li>
+      </ul>
+      <p>CEO Pesicka: "The home has become an essential care setting, supporting longer, healthier lives for patients and unlocking greater efficiency."</p>
+    </div>
+
+    <div class="card card-pad-lg" style="border-left:3px solid var(--bear);">
+      <h3 style="color:var(--bear);margin-top:0;">▼ Crosswind 1: GLP-1 Disruption</h3>
+      <p><strong>The threat to Apria's $737M sleep franchise.</strong> December 2024: FDA approved Eli Lilly's tirzepatide (Zepbound) for moderate-to-severe OSA in adults with obesity. Komodo Health data:</p>
+      <ul>
+        <li>OSA patients on tirzepatide start CPAP <span class="hl-r">83% less</span> than non-GLP-1 patients</li>
+        <li>Among new OSA pts: only 4% on tirzepatide started CPAP vs 22% otherwise</li>
+        <li>JAMA NetOpen: GLP-1 users 8% less likely to need CPAP at 1-yr follow-up</li>
+      </ul>
+      <p><strong>Counterpoint:</strong> >50% of U.S. OSA cases are still undiagnosed. Even halting new CPAP starts wouldn't immediately collapse the resupply annuity — base of 1M+ existing CPAP users continues.</p>
+    </div>
+    <div class="card card-pad-lg" style="border-left:3px solid var(--bear);">
+      <h3 style="color:var(--bear);margin-top:0;">▼ Crosswind 2: CMS Competitive Bidding</h3>
+      <p><strong>The threat to diabetes and ostomy categories.</strong> CMS finalized DMEPOS rule in late 2025:</p>
+      <ul>
+        <li><strong>CGMs + insulin pumps</strong> reclassified to "frequent &amp; substantial servicing" (monthly rental basis)</li>
+        <li><strong>Diabetes, ostomy, urology</strong> added to bid categories</li>
+        <li><strong>Bidding occurs late 2026</strong>; new rates effective <strong>Jan 1, 2028</strong></li>
+        <li>Prior rounds cut <strong>some categories ~50%</strong></li>
+      </ul>
+      <p><strong>Counterpoint:</strong> Bidding favors scaled, compliant operators. Smaller regional DMEs likely consolidate — Accendra could gain volume share even if price/unit falls. Magnitude of net impact unknowable until bids submitted.</p>
+    </div>
+  </div>
+
+  <div class="card card-pad-lg" style="margin-top:24px;">
+    <h3 style="margin-top:0;">Payer Mix — The Government Exposure</h3>
+    <p>Roughly <span class="hl-y">45% of revenue is ultimately government-funded</span> once Medicare Advantage is included. Reported "commercial" includes MA. The full picture:</p>
+    <div class="pmix-row"><span>Traditional Medicare</span><div class="pmix-bar"><i style="width:14%;"></i></div><span class="prod-pct">~14%</span></div>
+    <div class="pmix-row"><span>Medicaid</span><div class="pmix-bar"><i style="width:5%;"></i></div><span class="prod-pct">~5%</span></div>
+    <div class="pmix-row"><span>Medicare Advantage (in commercial)</span><div class="pmix-bar"><i style="width:26%;"></i></div><span class="prod-pct">~26%</span></div>
+    <div class="pmix-row"><span>Pure Commercial</span><div class="pmix-bar"><i style="width:55%;"></i></div><span class="prod-pct">~55%</span></div>
+    <p style="font-size:12px;color:var(--txt-3);margin-top:14px;">Government policy changes (CMS rules, MA rate adjustments) propagate quickly. Mid-2025 NIV/COPD rule already pressuring respiratory growth in 2026. Counterbalanced by scale advantage when policy raises compliance bar.</p>
+  </div>
+</section>
+
+<!-- ============== FINANCIALS ============== -->
+<section id="financials">
+  <h2><span class="num">07</span>Financials — The Numbers Behind The Reset</h2>
+  <p class="subhead">FactSet model basis. <strong>2025 was the divestiture trough year</strong> with $1.1B GAAP net loss (mostly write-downs from selling P&HS). Continuing-operations metrics show the underlying patient-direct business is profitable; the question is when GAAP catches up.</p>
+
+  <div class="grid g-2">
+    <div class="card card-pad-lg">
+      <h3 style="margin-top:0;">Revenue, EBITDA &amp; FCF (Continuing Ops)</h3>
+      <div class="chart-wrap-tall"><canvas id="rev-chart"></canvas></div>
+    </div>
+    <div class="card card-pad-lg">
+      <h3 style="margin-top:0;">Margin Profile</h3>
+      <div class="chart-wrap-tall"><canvas id="margin-chart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="card card-pad-lg" style="margin-top:24px;">
+    <h3 style="margin-top:0;">Income Statement Summary ($M)</h3>
+    <div style="overflow-x:auto;">
+    <table class="fin">
+      <thead><tr><th></th><th>2022A</th><th>2023A</th><th>2024A</th><th>2025A</th><th>2026E</th><th>2027E</th></tr></thead>
+      <tbody>
+        <tr class="tr-hdr"><td colspan="7">Revenue</td></tr>
+        <tr><td>Patient Direct (continuing)</td><td>2,057</td><td>2,553</td><td>2,680</td><td>2,762</td><td class="fcst">2,609</td><td class="fcst">2,726</td></tr>
+        <tr><td>P&amp;HS (divested 12/31/2025)</td><td>7,898</td><td>7,781</td><td>8,021</td><td>—</td><td>—</td><td>—</td></tr>
+        <tr class="tr-tot"><td>Total Revenue</td><td>9,955</td><td>10,334</td><td>10,701</td><td>2,762</td><td class="fcst">2,609</td><td class="fcst">2,726</td></tr>
+        <tr class="tr-hdr"><td colspan="7">Profitability</td></tr>
+        <tr><td>Gross Profit</td><td>1,826</td><td>2,125</td><td>2,219</td><td>1,289</td><td class="fcst">1,222</td><td class="fcst">1,282</td></tr>
+        <tr><td>Adj. EBIT</td><td>369</td><td>305</td><td>313</td><td>224</td><td class="fcst">193</td><td class="fcst">245</td></tr>
+        <tr><td>Adj. EBITDA</td><td>544</td><td>526</td><td>523</td><td>375</td><td class="fcst">343</td><td class="fcst">387</td></tr>
+        <tr><td>Adj. EBITDA Margin %</td><td>5.5%</td><td>5.1%</td><td>4.9%</td><td>13.6%</td><td class="fcst">13.2%</td><td class="fcst">14.2%</td></tr>
+        <tr class="tr-hdr"><td colspan="7">Below-the-line</td></tr>
+        <tr><td>Net Interest Expense</td><td>134</td><td>132</td><td>119</td><td>120</td><td class="fcst">108</td><td class="fcst">102</td></tr>
+        <tr><td>Adj. Net Income</td><td>184</td><td>106</td><td>120</td><td>80</td><td class="fcst">57</td><td class="fcst">98</td></tr>
+        <tr><td>GAAP Net Income</td><td>22</td><td>(41)</td><td>(363)</td><td>(1,101)</td><td class="fcst">57</td><td class="fcst">98</td></tr>
+        <tr><td>Adj. EPS ($)</td><td>2.42</td><td>1.39</td><td>1.56</td><td>1.04</td><td class="fcst">0.72</td><td class="fcst">1.22</td></tr>
+        <tr class="tr-hdr"><td colspan="7">Cash Flow</td></tr>
+        <tr><td>Operating Cash Flow</td><td>325</td><td>741</td><td>140</td><td>(102)</td><td class="fcst">291</td><td class="fcst">286</td></tr>
+        <tr><td>Capex (incl. equipment)</td><td>(167)</td><td>(208)</td><td>(228)</td><td>(201)</td><td class="fcst">(186)</td><td class="fcst">(190)</td></tr>
+        <tr><td>Free Cash Flow</td><td>158</td><td>533</td><td>(89)</td><td>(303)</td><td class="fcst">105</td><td class="fcst">96</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p style="font-size:12px;color:var(--txt-3);margin-top:14px;">2024-2025 GAAP losses driven by goodwill write-down ($307M FY24) and divestiture loss accounting (FY25). 2025 OCF reflects $98M Rotech termination fees (one-time). Adj. EBITDA jump in 2025 reflects shift to continuing-ops only after P&HS reclassified to discontinued ops.</p>
+  </div>
+</section>
+
+<!-- ============== CAPITAL ============== -->
+<section id="capital">
+  <h2><span class="num">08</span>Capital Structure &amp; The 2027 Wall</h2>
+  <p class="subhead">The single most important slide for ACH. The bull thesis lives or dies on whether management refinances <strong>$529M in March 2027</strong> at workable terms. Here's exactly what's due, what cash they have, and the path forward.</p>
+
+  <div class="card card-pad-lg">
+    <h3 style="margin-top:0;">Debt Maturity Wall</h3>
+    <div class="debt-wall">
+      <div class="debt-bar-wrap">
+        <div class="debt-amt">$0M</div>
+        <div class="debt-bar" style="background:#22c55e;height:30px;"><span></span></div>
+        <div class="debt-yr">2026</div>
+      </div>
+      <div class="debt-bar-wrap">
+        <div class="debt-amt">$529M</div>
+        <div class="debt-bar" style="background:linear-gradient(180deg,#ef4444,#f59e0b);height:280px;">
+          <span>RCF $204M<br>+<br>Term Loan A<br>$325M</span>
+        </div>
+        <div class="debt-yr"><span style="color:var(--bear);">2027</span></div>
+      </div>
+      <div class="debt-bar-wrap">
+        <div class="debt-amt">$0M</div>
+        <div class="debt-bar" style="background:#1a2540;height:20px;border:1px dashed var(--line-2);"></div>
+        <div class="debt-yr">2028</div>
+      </div>
+      <div class="debt-bar-wrap">
+        <div class="debt-amt">$475M</div>
+        <div class="debt-bar" style="background:linear-gradient(180deg,#5eead4,#38bdf8);height:240px;">
+          <span>4.500% Sr<br>Notes</span>
+        </div>
+        <div class="debt-yr">2029</div>
+      </div>
+      <div class="debt-bar-wrap">
+        <div class="debt-amt">$544M</div>
+        <div class="debt-bar" style="background:linear-gradient(180deg,#a78bfa,#5eead4);height:268px;">
+          <span>6.625% Sr<br>Notes</span>
+        </div>
+        <div class="debt-yr">2030</div>
+      </div>
+    </div>
+    <p style="text-align:center;color:var(--txt-3);font-size:12px;margin-top:16px;">$M outstanding by maturity. The 2026 maturity ($280M originally) was retired with divestiture proceeds in early 2026 — wall now starts in March 2027.</p>
+  </div>
+
+  <div class="grid g-2" style="margin-top:24px;">
+    <div class="card">
+      <h4>Liquidity Picture (FY25-end)</h4>
+      <ul>
+        <li>Cash &amp; equivalents: <strong>$282M</strong></li>
+        <li>Revolver capacity remaining: <strong>$217M of $450M</strong></li>
+        <li>A/R securitization availability: <strong>$16M of $150M</strong></li>
+        <li>Distribution proceeds tail: <strong>$12-15M (Spring 2026)</strong></li>
+        <li class="hl-g"><strong>Total accessible liquidity: ~$525M</strong></li>
+      </ul>
+      <p>Combined with FY26E FCF of $90-110M and FY27E of ~$96M, the math on covering 2027 maturities works — but only if EBITDA hits guide and stranded cost reduction stays on track.</p>
+    </div>
+    <div class="card">
+      <h4>Net Leverage Trajectory</h4>
+      <div class="chart-wrap-sm"><canvas id="lev-chart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="card card-pad-lg" style="margin-top:24px;">
+    <h3 style="margin-top:0;">Detailed Debt Stack ($M)</h3>
+    <div style="overflow-x:auto;">
+    <table class="fin">
+      <thead><tr><th>Instrument</th><th>Maturity</th><th>Coupon</th><th>FY25 Bal.</th><th>FY26E</th><th>FY27E</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>Revolving Credit Facility ($450M)</td><td>Mar 2027</td><td>SOFR+</td><td>204</td><td class="fcst">66</td><td class="fcst">66</td><td><span class="pill warn">Refinance</span></td></tr>
+        <tr><td>Term Loan A</td><td>Mar 2027</td><td>SOFR+</td><td>325</td><td class="fcst">69</td><td class="fcst">0</td><td><span class="pill warn">Pay down + Refi</span></td></tr>
+        <tr><td>4.500% Senior Notes</td><td>Mar 2029</td><td>4.50%</td><td>475</td><td class="fcst">501</td><td class="fcst">501</td><td><span class="pill bull">Long-dated</span></td></tr>
+        <tr><td>6.625% Senior Notes</td><td>Apr 2030</td><td>6.625%</td><td>544</td><td class="fcst">543</td><td class="fcst">543</td><td><span class="pill bull">Long-dated</span></td></tr>
+        <tr><td>A/R Securitization &amp; Other</td><td>Various</td><td>Floating</td><td>502</td><td class="fcst">615</td><td class="fcst">615</td><td><span class="pill acc">Working capital</span></td></tr>
+        <tr class="tr-tot"><td>Total Debt</td><td></td><td></td><td>2,050</td><td class="fcst">1,795</td><td class="fcst">1,726</td><td></td></tr>
+        <tr><td>Cash</td><td></td><td></td><td>(282)</td><td class="fcst">(82)</td><td class="fcst">(77)</td><td></td></tr>
+        <tr class="tr-tot"><td>Net Debt</td><td></td><td></td><td>1,768</td><td class="fcst">1,713</td><td class="fcst">1,649</td><td></td></tr>
+        <tr><td>Net Leverage (Net Debt / Adj EBITDA)</td><td></td><td></td><td>4.7x</td><td class="fcst">5.1x</td><td class="fcst">4.3x</td><td></td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+
+  <div class="card card-pad-lg" style="margin-top:24px;border-left:3px solid var(--warn);">
+    <h3 style="margin-top:0;color:var(--warn);">⚠ Why The Refinance Is The Whole Game</h3>
+    <p><strong>Fitch downgraded ACH to 'B+' Negative Watch in November 2025</strong> citing leverage above 5.0x through 2027 and explicit refinancing risk. The 2029 and 2030 senior notes are illiquid and trade at deep discounts (the 6.625% recently around <span class="hl-y">~51% of face</span>).</p>
+    <p>If management can refinance the March 2027 wall — even at higher coupon — Fitch removes Negative Watch, the 2029/2030 notes rally, and the equity has runway to compound through 2029. <strong>If the refi looks shaky in late 2026, equity dilution risk re-emerges.</strong> Management's explicit goal is 3.0x net leverage long-term; FY27E exit ~4.3x is the milestone bridge.</p>
+  </div>
+</section>
+
+<!-- ============== VALUATION ============== -->
+<section id="valuation">
+  <h2><span class="num">09</span>Valuation — Three Scenarios</h2>
+  <p class="subhead">Three independent frameworks converge on a wide outcome distribution. The math works because EV stays roughly constant — equity value is residual after subtracting net debt. Small changes in assumed multiple compound into massive equity outcomes.</p>
+
+  <div class="scen-grid">
+    <div class="scen bear">
+      <div class="label">Bear Case</div>
+      <div class="pt">$1.50</div>
+      <div class="upd">-59% downside</div>
+      <ul>
+        <li>2027 refi at penalty rates</li>
+        <li>EBITDA holds at $310M</li>
+        <li>5.5x EV/EBITDA (distressed)</li>
+        <li>Net debt $1.85B</li>
+        <li>~$120M residual equity / ~80M shares</li>
+      </ul>
+    </div>
+    <div class="scen base">
+      <div class="label">Base Case (DV Capital, Feb 2026)</div>
+      <div class="pt">$13.50</div>
+      <div class="upd hl-g">+267% upside</div>
+      <ul>
+        <li>2027 EBITDA $380M (14% margin)</li>
+        <li>2027 FCF $136M (5% margin)</li>
+        <li>7x EV/EBITDA</li>
+        <li>Net debt $1.62B</li>
+        <li>~$1.04B equity / ~7.7x FCF</li>
+      </ul>
+    </div>
+    <div class="scen bull">
+      <div class="label">Bull Case (Original Jan 2026)</div>
+      <div class="pt">$17.59</div>
+      <div class="upd hl-g">+378% upside</div>
+      <ul>
+        <li>2027 EBITDA $395M (13.75% margin)</li>
+        <li>2027 FCF $151M (5.3% margin)</li>
+        <li>9x P/FCF (in line w/ history)</li>
+        <li>Net debt $1.5B</li>
+        <li>$1.36B mkt cap, full re-rating</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="grid g-2" style="margin-top:30px;">
+    <div class="card card-pad-lg">
+      <h3 style="margin-top:0;">EV/EBITDA Sensitivity Heatmap</h3>
+      <p style="color:var(--txt-3);font-size:13px;">Equity value ($M) on 2027E EBITDA × EV/EBITDA multiple, less assumed $1.62B net debt.</p>
+      <div style="overflow-x:auto;">
+      <table class="fin" style="font-size:12px;">
+        <thead><tr><th></th><th>5.0x</th><th>6.0x</th><th>7.0x</th><th>8.0x</th><th>9.0x</th></tr></thead>
+        <tbody>
+          <tr><td><strong>$320M EBITDA</strong></td><td>(20)</td><td>300</td><td>620</td><td>940</td><td>1,260</td></tr>
+          <tr><td><strong>$360M EBITDA</strong></td><td>180</td><td>540</td><td>900</td><td>1,260</td><td>1,620</td></tr>
+          <tr><td><strong>$380M EBITDA</strong> <span class="pill acc" style="font-size:9px;">Base</span></td><td>280</td><td>660</td><td><strong style="color:var(--acc);">1,040</strong></td><td>1,420</td><td>1,800</td></tr>
+          <tr><td><strong>$400M EBITDA</strong></td><td>380</td><td>780</td><td>1,180</td><td>1,580</td><td>1,980</td></tr>
+          <tr><td><strong>$450M EBITDA</strong></td><td>630</td><td>1,080</td><td>1,530</td><td>1,980</td><td>2,430</td></tr>
+        </tbody>
+      </table>
+      </div>
+      <p style="font-size:12px;color:var(--txt-3);margin-top:10px;">Implied share price = equity value / 80M diluted shares. Base case $1,040M = $13.00/share. Highlighted cell ≈ DV Capital target.</p>
+    </div>
+    <div class="card card-pad-lg">
+      <h3 style="margin-top:0;">Comparable Transactions</h3>
+      <table class="fin">
+        <thead><tr><th>Target</th><th>Acquirer</th><th>Value</th><th>EV/EBITDA</th></tr></thead>
+        <tbody>
+          <tr><td>Apria</td><td>Owens &amp; Minor</td><td>$1.57B</td><td>6.4x</td></tr>
+          <tr><td>Byram Healthcare</td><td>Owens &amp; Minor</td><td>$380M</td><td>10.6x</td></tr>
+          <tr><td>Rotech (cancelled)</td><td>Accendra</td><td>$1.36B</td><td>6.3x</td></tr>
+          <tr><td>Medical Action Industries</td><td>Owens &amp; Minor</td><td>$285M</td><td>18.8x</td></tr>
+          <tr><td>Amedisys</td><td>Optum / UNH</td><td>$3.7B</td><td>14.5x</td></tr>
+          <tr><td>LHC Group</td><td>Optum / UNH</td><td>$5.4B</td><td>22.7x</td></tr>
+          <tr><td>Kindred at Home</td><td>Humana</td><td>—</td><td>10.6x</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:12px;color:var(--txt-3);margin-top:10px;">DME-pure precedents: 6–11x. Skilled home-care services: 14-23x (different model). Fitch and Ventum benchmark scaled-DME at <strong>6.0–6.3x</strong> as a fair second-tier multiple.</p>
+    </div>
+  </div>
+
+  <div class="card card-pad-lg" style="margin-top:24px;">
+    <h3 style="margin-top:0;">Why the Multiple Could Re-Rate</h3>
+    <p>Accendra's 20-year history shows median EV/EBITDA of <strong>9x</strong> and median P/FCF of <strong>10.7x</strong>. The current ~6x reflects:</p>
+    <div class="grid g-3">
+      <div><h4>Discount Factor 1</h4><p style="margin-top:0;">Distressed balance sheet — leverage 5.1x with 2027 wall. <span class="hl-y">Removes if refinanced.</span></p></div>
+      <div><h4>Discount Factor 2</h4><p style="margin-top:0;">Lost contract creates 2026 trough. <span class="hl-y">Removes after Q1 2027 lap.</span></p></div>
+      <div><h4>Discount Factor 3</h4><p style="margin-top:0;">Stranded costs of $36.5M. <span class="hl-y">Phased to ~$10M by 2027.</span></p></div>
+    </div>
+    <p style="margin-top:14px;">If <em>any one</em> overhang clears, multiple should expand by 1-2 turns. If all three clear, 7–9x is realistic — implying $13-17 share price as in the bull/base cases above. <strong>The market doesn't need to love ACH; it just needs to stop fearing bankruptcy.</strong></p>
+  </div>
+</section>
+
+<!-- ============== BULL/BEAR ============== -->
+<section id="bull-bear">
+  <h2><span class="num">10</span>Bull vs Bear — The Live Debate</h2>
+  <p class="subhead">Every position needs a steel-manned counter. AlphaSense, Deutsche Bank fixed-income, Fitch, Jefferies, and a half-dozen industry experts have all weighed in. Here's what each side actually believes.</p>
+
+  <div class="bb-tabs">
+    <button class="bb-tab bull active" data-bb="bull">▲ Bull Case</button>
+    <button class="bb-tab bear" data-bb="bear">▼ Bear Case</button>
+    <button class="bb-tab" data-bb="experts">Expert Voices</button>
+  </div>
+
+  <div class="bb-content active" id="bb-bull">
+    <div class="bb-card bull"><h4>Liquidity is Sufficient — Bankruptcy Priced In, Won't Happen</h4><p>$282M cash + $217M revolver + $150M securitization + 2026 FCF $90-110M + retained NOLs from divestiture = clear path through both 2026 and 2027 maturities, even under stress. Market cap of $281M implies bankruptcy probability that doesn't square with the math.</p></div>
+
+    <div class="bb-card bull"><h4>Pure-Play Margin Story Improves Through 2027</h4><p>Stranded costs phase from $36.5M to ~$10M by 2027 (+$25M EBITDA). Debt paydown saves ~$20M annual interest. Lost contract laps Q1 2027. Replaced with higher-margin business. Each lever individually worth 80-100bps of EBITDA margin — combined could lift margins from 13.2% to ~14-15%.</p></div>
+
+    <div class="bb-card bull"><h4>Demographic Tailwinds Are Real and Compounding</h4><p>71M Americans age 65+ by 2030. 96M prediabetic. Home-care market growing 10-12%. Once a CPAP or insulin pump patient enters Accendra's funnel they're a 5-10 year annuity. Even modest organic growth +3% on the existing base lifts revenue $80M/year.</p></div>
+
+    <div class="bb-card bull"><h4>Capital Allocation Has Pivoted Constructively</h4><p>The Rotech acquisition collapse, while costly ($80M fee), was a blessing — it forced the divestiture conversation and avoided doubling down on CPAP just before the GLP-1 wave. Stock rose 14% on Rotech termination. Mgmt now firmly anti-M&A, all FCF earmarked for debt.</p></div>
+
+    <div class="bb-card bull"><h4>Optionality on Optum National Preferred Agreement</h4><p>The recently secured nationwide preferred-provider agreement with Optum (UnitedHealth) provides volume backstop and improves replaceability of the lost capitation contract. If Optum directs even modest incremental volume, replacement of the $300M revenue gap becomes faster than modeled.</p></div>
+
+    <div class="bb-card bull"><h4>$90M Buyback Authorization Live</h4><p>Of the $100M Feb-2025 board authorization, only $10M was used in 2025. <strong>$90M remaining = 32% of market cap.</strong> If management uses even half opportunistically below $5/share, equity returns are dramatically accelerated.</p></div>
+
+    <div class="bb-card bull"><h4>Multiple Compression is Unsustainable</h4><p>20-yr median EV/EBITDA = 9x. Today: ~6x. AdaptHealth: 7.5x. Even modest re-rating to 7x on $380M 2027 EBITDA = $1.04B equity ($13.5/share). Re-rating doesn't require operational excellence — just the absence of bankruptcy.</p></div>
+  </div>
+
+  <div class="bb-content" id="bb-bear">
+    <div class="bb-card bear"><h4>March 2027 Refinance Is a Binary Risk</h4><p>$529M maturing in March 2027 ($325M TLA + $204M RCF). Fitch downgraded to B+ Negative Watch citing exactly this. If credit conditions worsen in late 2026 and the refinance happens at SOFR+800 instead of SOFR+450, interest expense jumps $20M, EBITDA coverage compresses, and equity becomes toxic to long-only money.</p></div>
+
+    <div class="bb-card bear"><h4>$300M Lost Contract Creates 12% Revenue Hole — Multi-Year Recovery</h4><p>Capitated contract terminated by major commercial payor. 2026 revenue down 6%. Additional $40M bleed into 2027. Fitch warns full replacement "could take multiple years" given competitive landscape. If Accendra can't backfill volume, EBITDA guide proves optimistic.</p></div>
+
+    <div class="bb-card bear"><h4>GLP-1 Disruption to the Crown Jewel</h4><p>27% of revenue is sleep therapy. Tirzepatide FDA approved for OSA Dec-2024. Komodo data: 83% reduction in CPAP starts among GLP-1 users. Even if the resupply base holds, new starts represent 20%+ of franchise. Long-duration headwind that compounds; not a 2026/27 issue but a 2028+ valuation cap.</p></div>
+
+    <div class="bb-card bear"><h4>CMS DMEPOS Bidding Reset Hits Core Categories</h4><p>Late-2025 final rule: CGMs + insulin pumps reclassified to monthly rental, added to bid categories. Bidding late 2026, rates effective Jan 2028. Diabetes is 29% of revenue. Prior bid rounds slashed some categories ~50%. Even half that hit on diabetes is $115M of revenue and ~$50M EBITDA.</p></div>
+
+    <div class="bb-card bear"><h4>Diversification Loss = Single-Channel Vulnerability</h4><p>Former O&M GVP: by abandoning hospital distribution, Accendra is locked out of primary vendor agreements with IDNs (Mayo, etc.). Mega-distributors (Medline, Cardinal, McKesson) bundle acute-care contracts with proprietary private-label home-care products to push DMEs out of those accounts entirely.</p></div>
+
+    <div class="bb-card bear"><h4>Compensation Misalignment</h4><p>Executive comp tied to adj. EBITDA, adj. operating income, revenue growth — <strong>not free cash flow.</strong> For a leveraged turnaround where FCF is the only thing that matters, this is a flagged misalignment. Adjusted metrics can look clean while cash leaks. DV Capital flagged this risk in the original thesis.</p></div>
+
+    <div class="bb-card bear"><h4>Margin Compression vs Diversified Distributors</h4><p>Pure-play home-care margins ~10-13%. Medline, Cardinal achieve high-teens via acute-care bundling and scale on private-label. Without acute footprint, Accendra structurally ceiling'd at low-mid teens unless tech leverage delivers (unproven at scale).</p></div>
+
+    <div class="bb-card bear"><h4>Take-Private at Premium Caps Upside</h4><p>At $281M mkt cap, a PE buyer (Platinum, Apollo) could offer $5-7 per share — premium to today, fraction of the bull case. Board may accept. Doug Springer in DV Capital comment thread already noting bond strategy implies someone views ACH as restructuring candidate, not turnaround.</p></div>
+  </div>
+
+  <div class="bb-content" id="bb-experts">
+    <div class="exp">
+      <p class="exp-q">"Apria provides Accendra with a distinct technological advantage in the pulmonary space, driving its status as the company's largest revenue producer... However, Accendra generates relatively slim profit margins of around 10%, which compares unfavorably to the high-teens margins achieved by larger competitors."</p>
+      <div class="exp-cite">— Executive VP, Valor Elite Supply (Mar 2026, AlphaSense expert call)</div>
+    </div>
+    <div class="exp">
+      <p class="exp-q">"Spinning off the $8B distribution business was necessary to eliminate the dead weight... but Accendra's pure-play status locks it out of primary distribution agreements with large integrated delivery networks, potentially hindering its ability to compete against massive, diversified distributors expanding into the continuum of care."</p>
+      <div class="exp-cite">— Former Group VP, Owens &amp; Minor (Feb 2026)</div>
+    </div>
+    <div class="exp">
+      <p class="exp-q">"Patients treating their obesity with GLP-1s are increasingly curing the comorbidities that cause obstructive sleep apnea. This dynamic drastically shortens the lifespan of CPAP therapies, which were historically viewed as lifetime treatments."</p>
+      <div class="exp-cite">— Former VP, SuperCare Health (Feb 2026)</div>
+    </div>
+    <div class="exp">
+      <p class="exp-q">"Sustainable free cash flow generation and deleveraging remain primary investor concerns. We project net leverage will climb to 5.1x in 2026 as EBITDA contracts to an estimated $339M... Hold rating maintained on the bonds."</p>
+      <div class="exp-cite">— Deutsche Bank Research (Mar 2026)</div>
+    </div>
+    <div class="exp">
+      <p class="exp-q">"Accendra Health's EBITDA leverage will persistently remain above 5.0x through 2027... The downgrade reflects lower-than-anticipated debt reduction following the separation, near-term stranded costs, and severe margin pressure stemming from the recent loss of a large commercial payor contract."</p>
+      <div class="exp-cite">— Fitch Ratings, downgrade to B+ Negative Watch (Nov 2025)</div>
+    </div>
+    <div class="exp">
+      <p class="exp-q">"This stabilization provides a favorable operational backdrop... Larger entities like Accendra are uniquely equipped to sustain profitability, navigate stringent payer constraints, and capture market share as smaller regional DMEs face consolidation pressures."</p>
+      <div class="exp-cite">— Director, Tanglewood Medical Supplies (Mar 2026)</div>
+    </div>
+    <div class="exp">
+      <p class="exp-q">"Accendra Health is moving faster than most turnarounds I cover. The company is smaller, more focused, and is taking aggressive action across its balance sheet and cost structure. When changes are this concentrated, results tend to show up quickly."</p>
+      <div class="exp-cite">— Kyler Johnson, DeepValue Capital (Jan 2026)</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============== RISKS ============== -->
+<section id="risks">
+  <h2><span class="num">11</span>Key Risks &amp; What Would Break the Thesis</h2>
+  <p class="subhead">Honest accounting of what can go wrong. The DV Capital thesis explicitly flags six material risks. AlphaSense identifies refinancing as the binary downgrade trigger.</p>
+
+  <div class="grid g-2">
+    <div class="card" style="border-left:3px solid var(--bear);">
+      <h4 style="color:var(--bear);">1. Refinancing Wall Failure</h4>
+      <p><strong>What:</strong> March 2027 RCF + TLA refi at penalty rates or fails altogether.</p>
+      <p><strong>Probability:</strong> Moderate. Bond market for B+ healthcare names depends heavily on macro. Rate environment 2H26 critical.</p>
+      <p><strong>Impact:</strong> Equity-killer. Forces dilutive raise, distressed restructuring, or sale.</p>
+      <p><strong>Watchlist:</strong> Q3-2026 earnings color on refi process. Deutsche Bank/Fitch credit commentary.</p>
+    </div>
+
+    <div class="card" style="border-left:3px solid var(--bear);">
+      <h4 style="color:var(--bear);">2. Stranded Costs Linger</h4>
+      <p><strong>What:</strong> $36.5M stranded costs phase down slower than guided.</p>
+      <p><strong>Probability:</strong> Moderate. IT/HR system rationalization always slips.</p>
+      <p><strong>Impact:</strong> 2027 EBITDA missed by $15-25M, FCF below $100M, leverage stuck above 5x.</p>
+      <p><strong>Watchlist:</strong> 1H 2026 earnings — must show measurable cost reduction quarter-over-quarter.</p>
+    </div>
+
+    <div class="card" style="border-left:3px solid var(--bear);">
+      <h4 style="color:var(--bear);">3. Additional Contract Losses</h4>
+      <p><strong>What:</strong> Another commercial payer cancels, replicating the $300M hole.</p>
+      <p><strong>Probability:</strong> Low-moderate. The lost contract was a competitively bid capitation deal — not core fee-for-service.</p>
+      <p><strong>Impact:</strong> Cumulative revenue erosion, EBITDA leverage worsens, multiple compresses.</p>
+      <p><strong>Watchlist:</strong> Quarterly contract win/loss disclosures.</p>
+    </div>
+
+    <div class="card" style="border-left:3px solid var(--warn);">
+      <h4 style="color:var(--warn);">4. CMS Competitive Bidding Severity</h4>
+      <p><strong>What:</strong> Jan 2028 rates cut diabetes/ostomy by 30-50% as in prior rounds.</p>
+      <p><strong>Probability:</strong> Moderate. CMS posture is tougher this cycle.</p>
+      <p><strong>Impact:</strong> Beyond 2027 model. ~$50-75M annual EBITDA at risk if worst case. Offset by volume share gains from smaller players exiting.</p>
+      <p><strong>Watchlist:</strong> Late-2026 bid submissions, mid-2027 award announcements.</p>
+    </div>
+
+    <div class="card" style="border-left:3px solid var(--warn);">
+      <h4 style="color:var(--warn);">5. GLP-1 Adoption Curve</h4>
+      <p><strong>What:</strong> Tirzepatide for OSA + future indications + supply normalization shrink CPAP TAM faster than expected.</p>
+      <p><strong>Probability:</strong> High over 5+ years; low for 2026-2027 numbers.</p>
+      <p><strong>Impact:</strong> Long-duration headwind, multiple cap. Apria revenue could be 10-15% lower by 2030 than current trajectory implies.</p>
+      <p><strong>Watchlist:</strong> Quarterly new-CPAP-start metrics, Eli Lilly Zepbound script trends.</p>
+    </div>
+
+    <div class="card" style="border-left:3px solid var(--warn);">
+      <h4 style="color:var(--warn);">6. Take-Private at Discount</h4>
+      <p><strong>What:</strong> PE bidder offers $5-7/share premium; board accepts to crystallize value.</p>
+      <p><strong>Probability:</strong> Moderate. Distressed PE shops circle this kind of asset.</p>
+      <p><strong>Impact:</strong> Caps upside at 50-100% rather than 250-400%. Premature value realization.</p>
+      <p><strong>Watchlist:</strong> Unusual options activity, 13D/G filings, board changes.</p>
+    </div>
+
+    <div class="card" style="border-left:3px solid var(--bear);">
+      <h4 style="color:var(--bear);">7. Equity Dilution</h4>
+      <p><strong>What:</strong> If FCF disappoints AND refi looks shaky, mgmt issues equity to plug gap.</p>
+      <p><strong>Probability:</strong> Low — would be capitulation. Mgmt clearly avoiding.</p>
+      <p><strong>Impact:</strong> At $3-4 share, even $200M raise = 50%+ dilution. Catastrophic.</p>
+      <p><strong>Watchlist:</strong> Shelf registration filings, S-3 activity.</p>
+    </div>
+
+    <div class="card" style="border-left:3px solid var(--warn);">
+      <h4 style="color:var(--warn);">8. Manufacturer Concentration / Cost Inflation</h4>
+      <p><strong>What:</strong> Top-3 suppliers = 40% of purchases. Cost increases 2026 already cited as headwind.</p>
+      <p><strong>Probability:</strong> Continues. ResMed et al have pricing power.</p>
+      <p><strong>Impact:</strong> 50-100bps margin compression annually if unchecked.</p>
+      <p><strong>Watchlist:</strong> Gross margin Q-over-Q. Manufacturer earnings calls.</p>
+    </div>
+  </div>
+
+  <div class="card card-pad-lg" style="margin-top:24px;background:linear-gradient(180deg,rgba(239,68,68,.04),rgba(245,158,11,.02));border-left:3px solid var(--bear);">
+    <h3 style="margin-top:0;color:var(--bear);">What Breaks the Thesis Outright</h3>
+    <p>The thesis is broken if <strong>any one</strong> of these happens:</p>
+    <ol style="color:var(--txt-2);">
+      <li><strong>March 2027 refinance fails or comes at SOFR+800+.</strong> Equity goes to zero or near-zero in restructuring scenarios.</li>
+      <li><strong>1H 2026 earnings show stranded costs flat or rising.</strong> Indicates cost-out program isn't real — destroys 2027 EBITDA bridge.</li>
+      <li><strong>Equity raise announced.</strong> 50%+ dilution at current price levels permanently impairs returns.</li>
+      <li><strong>Second major contract loss in 2026.</strong> Demonstrates churn isn't an isolated event; revenue base is shrinking, not stabilizing.</li>
+    </ol>
+    <p>Conversely, if H1-2026 prints in line with EBITDA guide ($335-355M), stranded cost run-rate is below $25M annualized exiting Q4 2026, and refi indications come at SOFR+450 or below — the bull case is essentially confirmed and equity should re-rate hard.</p>
+  </div>
+</section>
+
+<!-- ============== CATALYSTS ============== -->
+<section id="catalysts">
+  <h2><span class="num">12</span>Catalyst Timeline</h2>
+  <p class="subhead">When the next 24 months actually settle the thesis. Most catalysts are operational milestones, not events — but the refi window (Q4 2026) is the single biggest binary.</p>
+
+  <div class="grid g-2">
+    <div>
+      <h3>2026 Roadmap</h3>
+      <div class="timeline">
+        <div class="tl-item bull"><div class="tl-date">2026-Q1</div><div class="tl-title">Trough Quarter</div><div class="tl-body">Mgmt guided Q1 will be weakest of year. Stranded cost still elevated. Use as buying opportunity if guide is reaffirmed.</div></div>
+        <div class="tl-item"><div class="tl-date">2026-Q1-Q2</div><div class="tl-title">Stranded Cost Reduction</div><div class="tl-body">Watchlist: should see $5-10M Q-over-Q reduction. Critical signal of cost-out program credibility.</div></div>
+        <div class="tl-item"><div class="tl-date">2026-Q2</div><div class="tl-title">My Apria App Launch</div><div class="tl-body">Patient-facing app for CPAP adherence. Drives operational efficiency and supports retention narrative.</div></div>
+        <div class="tl-item warn"><div class="tl-date">2026-Q3</div><div class="tl-title">CMS Bid Process Begins</div><div class="tl-body">Suppliers prepare for late-2026 competitive bidding. Headlines on CGM/diabetes inclusion. Sentiment volatility.</div></div>
+        <div class="tl-item bull"><div class="tl-date">2026-Q3</div><div class="tl-title">EBITDA Inflection</div><div class="tl-body">~60% of FY26 EBITDA in 2H. Strong print here would be a major confidence builder.</div></div>
+        <div class="tl-item warn"><div class="tl-date">2026-Q4</div><div class="tl-title">REFINANCE WINDOW</div><div class="tl-body" style="color:var(--warn);font-weight:600;">Most likely time mgmt approaches lenders for March 2027 wall. Outcome here largely sets the equity story.</div></div>
+        <div class="tl-item"><div class="tl-date">2026-late</div><div class="tl-title">CMS Bid Submissions</div><div class="tl-body">Suppliers submit competitive bids. Award decisions follow in 2027.</div></div>
+      </div>
+    </div>
+    <div>
+      <h3>2027 &amp; Beyond</h3>
+      <div class="timeline">
+        <div class="tl-item bear"><div class="tl-date">2027-Q1</div><div class="tl-title">Lost Contract Laps</div><div class="tl-body">$300M revenue headwind fully cycled. Y/Y comps reset to true organic growth basis. Investor narrative pivots.</div></div>
+        <div class="tl-item bear"><div class="tl-date">2027-Mar</div><div class="tl-title">RCF + TLA MATURE</div><div class="tl-body" style="color:var(--bear);font-weight:600;">$529M maturity. Must be refinanced or repaid. The single most important date in the thesis.</div></div>
+        <div class="tl-item bull"><div class="tl-date">2027</div><div class="tl-title">Stranded Cost = ~$10M</div><div class="tl-body">Phased down from $36.5M. ~$25M EBITDA tailwind hits the run-rate.</div></div>
+        <div class="tl-item bull"><div class="tl-date">2027-FY</div><div class="tl-title">EBITDA $380-395M / FCF $96-151M</div><div class="tl-body">Bull cases hit. Deleveraging accelerates. Net leverage ~4.3x.</div></div>
+        <div class="tl-item warn"><div class="tl-date">2028-Jan</div><div class="tl-title">CMS Bid Rates Effective</div><div class="tl-body">New diabetes/ostomy/urology rates kick in. Magnitude of bid impact becomes known.</div></div>
+        <div class="tl-item bull"><div class="tl-date">2028-2029</div><div class="tl-title">Toward 3.0x Leverage Target</div><div class="tl-body">If FCF compounds, mgmt's stated goal of 3.0x net leverage achievable by 2029. Multiple expansion to historical 9x.</div></div>
+        <div class="tl-item"><div class="tl-date">2029-Mar</div><div class="tl-title">$475M Notes Mature</div><div class="tl-body">Next maturity. Should be addressable from balance sheet by then if execution holds.</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============== M&A and Mgmt ============== -->
+<section id="mna">
+  <h2><span class="num">13</span>M&amp;A History &amp; Management</h2>
+  <p class="subhead">Capital allocation history is the single best predictor of future capital allocation. Accendra's record under CEO Pesicka is mixed — debt-funded growth that nearly broke the company, followed by a constructive divestiture.</p>
+
+  <div class="grid g-2">
+    <div class="card card-pad-lg">
+      <h3 style="margin-top:0;">Capital Allocation Track Record</h3>
+      <table class="fin">
+        <thead><tr><th>Date</th><th>Action</th><th>Value</th><th>Multiple</th><th>Outcome</th></tr></thead>
+        <tbody>
+          <tr><td>2012</td><td>Movianto (acq)</td><td>$158M</td><td>—</td><td><span class="pill warn">EU exit</span></td></tr>
+          <tr><td>2014</td><td>Medical Action Industries</td><td>$285M</td><td>18.8x</td><td><span class="pill warn">Premium</span></td></tr>
+          <tr><td>2017</td><td>Byram Healthcare</td><td>$380M</td><td>10.6x</td><td><span class="pill bull">Cornerstone</span></td></tr>
+          <tr><td>2017</td><td>Halyard Surg/Infection</td><td>$709M</td><td>—</td><td><span class="pill bear">Levered</span></td></tr>
+          <tr><td>2022</td><td>Apria (acq)</td><td>$1.57B</td><td>6.4x</td><td><span class="pill bull">Cornerstone</span></td></tr>
+          <tr><td>2024-2025</td><td>Rotech (cancelled)</td><td>$1.36B</td><td>—</td><td><span class="pill warn">$80M fee</span></td></tr>
+          <tr><td>Feb 2025</td><td>$100M Buyback Auth</td><td>—</td><td>—</td><td><span class="pill bull">$90M unused</span></td></tr>
+          <tr><td>Dec 2025</td><td>P&amp;HS Divestiture</td><td>$375M</td><td>—</td><td><span class="pill bull">Reset</span></td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:12px;color:var(--txt-3);margin-top:14px;">Pattern: Aggressive debt-funded acquisitions (2017-2022) → balance-sheet stress (2022-2024) → forced divestiture (2025) → discipline mode (2026+). The Rotech termination saved Accendra from ~$1.5B more debt at the worst possible time.</p>
+    </div>
+
+    <div class="card card-pad-lg">
+      <h3 style="margin-top:0;">Management — Key People</h3>
+      <h4 style="color:var(--txt);text-transform:none;letter-spacing:0;font-size:16px;">Ed Pesicka — CEO (2019-present)</h4>
+      <ul>
+        <li>Started at PricewaterhouseCoopers (audit)</li>
+        <li>15 years at Thermo Fisher Scientific, rose to <strong>Chief Commercial Officer</strong> overseeing ~$8B in business units</li>
+        <li>Joined Owens &amp; Minor 2019 — predecessor was already over-levered</li>
+        <li>Pivoted hard during COVID (PPE surge)</li>
+        <li>Aggressive M&amp;A 2021-2024 added leverage; Rotech failed</li>
+        <li>Pivoted to divestiture-led reset in 2025</li>
+        <li><span class="hl-y">Open question:</span> Is the discipline shift cultural, or just balance-sheet-forced?</li>
+      </ul>
+
+      <h4 style="color:var(--txt);text-transform:none;letter-spacing:0;font-size:16px;margin-top:20px;">Dirk Benson — Chief Commercial Officer (2026)</h4>
+      <ul>
+        <li>Joined late 2025 / early 2026 to support pivot</li>
+        <li>Prior leadership at <strong>Medline</strong> (mega-distributor)</li>
+        <li>Prior leadership at <strong>Henry Schein</strong> (medical/dental distribution)</li>
+        <li>Industry tenure deep; brings discipline to commercial strategy</li>
+      </ul>
+
+      <h4 style="color:var(--txt);text-transform:none;letter-spacing:0;font-size:16px;margin-top:20px;">Compensation Structure</h4>
+      <ul>
+        <li>60% Adj. Operating Income (cash bonus)</li>
+        <li>20% Revenue Growth (cash bonus)</li>
+        <li>20% Operating Model Realignment (cost program)</li>
+        <li>LTI: 50% PSU on EBITDA + relative TSR vs. Russell 3000 Med Equip / 50% RSU time-based</li>
+        <li><span class="hl-r">Free cash flow not a primary driver.</span> DV Capital flagged this as misaligned for a leveraged turnaround.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============== SOURCES ============== -->
+<section id="sources">
+  <h2><span class="num">14</span>Sources &amp; Methodology</h2>
+  <p class="subhead">All numerical data anchored to source documents. Estimates marked as such. Forward years (2026E, 2027E) reflect a synthesis of management guidance, DV Capital, Deutsche Bank, and FactSet/UBS estimates.</p>
+
+  <div class="grid g-2">
+    <div class="card">
+      <h4>Primary Documents Used</h4>
+      <ul>
+        <li><strong>DV Capital — Initial Thesis (Jan 8, 2026):</strong> "95% Down, 700%+ Upside"</li>
+        <li><strong>DV Capital — Show Me Story (Feb 23, 2026):</strong> Post-earnings update, $13.50 PT</li>
+        <li><strong>AlphaSense — Bull vs Bear Debate (Apr 30, 2026)</strong></li>
+        <li><strong>AlphaSense — Moat &amp; Growth Risks (Apr 30, 2026)</strong></li>
+        <li><strong>AlphaSense — Quality Assessment (Apr 30, 2026):</strong> 11.5/16 score</li>
+        <li><strong>FactSet UBS Healthcare Distribution Model (Feb 20, 2026)</strong></li>
+        <li><strong>Deutsche Bank Research (Mar 25, 2026):</strong> Q4'25 model update</li>
+        <li><strong>Fitch Ratings (Nov 7 2025, Mar 16 2026):</strong> B+ Negative Watch</li>
+        <li><strong>Accendra Health 10-K (Feb 20, 2026), Q4 2025 Earnings Call</strong></li>
+        <li><strong>Press Releases &amp; 8-Ks throughout 2025-2026</strong></li>
+        <li><strong>Expert Calls:</strong> Former O&amp;M GVP, Valor Elite Supply EVP, SuperCare Health VP, Referwell Director, Tanglewood Medical, Apria Former GM</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>Secondary / Industry</h4>
+      <ul>
+        <li><strong>JAMA Network Open</strong> — GLP-1 / CPAP study (2025)</li>
+        <li><strong>Komodo Health</strong> — Tirzepatide impact on CPAP starts</li>
+        <li><strong>FDA</strong> — Tirzepatide OSA approval (Dec 2024)</li>
+        <li><strong>CMS</strong> — DMEPOS Competitive Bidding Final Rule (2025-2026)</li>
+        <li><strong>Endocrine Society / AAHomecare</strong> — CB Program comments</li>
+        <li><strong>Yahoo Finance, Robinhood, StockTitan</strong> — Live ACH price data</li>
+        <li><strong>Apria.com / ByramHealthcare.com</strong> — Footprint data</li>
+        <li><strong>NIH</strong> — Diabetes prevalence statistics</li>
+        <li><strong>Public companies (AdaptHealth, Quipt, Cardinal, McKesson)</strong> — Peer benchmarks</li>
+      </ul>
+      <h4 style="margin-top:16px;">Modeling Notes</h4>
+      <ul style="font-size:13px;">
+        <li>Continuing-ops figures reflect post-divestiture business only (Patient Direct).</li>
+        <li>2026E uses mgmt guide midpoint: revenue $2.55-2.65B, EBITDA $335-355M, FCF $90-110M.</li>
+        <li>2027E based on DV Capital Show-Me model; conservative vs original Jan-26 thesis.</li>
+        <li>Historical financial data sourced from FactSet UBS model.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="panel-glow" style="margin-top:24px;text-align:center;">
+    <p style="margin:0;color:var(--txt-2);">This dashboard synthesizes information from public filings, sell-side and independent research, expert interviews, and primary industry sources. <strong>Not investment advice.</strong> Verify all figures against original SEC filings before investing.</p>
+  </div>
+</section>
+
+<footer class="footer">
+  Built as a first-principles deep-dive on <strong>Accendra Health (NYSE: ACH)</strong>. Data current as of April 30, 2026. All sources cited inline. Copyright remains with original document publishers.
+</footer>
+
+<script>
+  // ====== animated counters ======
+  function animateCounter(el, end, prefix='', suffix='', decimals=0, duration=1400){
+    const start = 0;
+    const startT = performance.now();
+    function tick(now){
+      const t = Math.min(1, (now-startT)/duration);
+      const eased = 1 - Math.pow(1-t, 3);
+      const val = start + (end-start)*eased;
+      el.textContent = prefix + val.toFixed(decimals).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + suffix;
+      if(t<1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+  function startCounters(){
+    document.querySelectorAll('[data-counter]').forEach(el=>{
+      const v = parseFloat(el.dataset.counter);
+      animateCounter(el, v, el.dataset.prefix||'', el.dataset.suffix||'', parseInt(el.dataset.decimals||'0'));
+    });
+  }
+  // simple intersection observer for hero counters
+  const heroIO = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{ if(e.isIntersecting){ heroIO.unobserve(e.target); /* trigger any animation */ }});
+  });
+
+  // ====== Bull/Bear tabs ======
+  document.querySelectorAll('.bb-tab').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      document.querySelectorAll('.bb-tab').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      const target = btn.dataset.bb;
+      document.querySelectorAll('.bb-content').forEach(c=>c.classList.remove('active'));
+      document.getElementById('bb-'+target).classList.add('active');
+    });
+  });
+
+  // ====== Nav scrollspy ======
+  const links = document.querySelectorAll('.nav-links a');
+  const sections = Array.from(links).map(a=>document.querySelector(a.getAttribute('href'))).filter(Boolean);
+  function onScroll(){
+    const y = window.scrollY + 120;
+    let active = sections[0];
+    sections.forEach(s=>{ if(s.offsetTop <= y) active = s; });
+    if(active){ links.forEach(a=>a.classList.toggle('active', a.getAttribute('href')==='#'+active.id)); }
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  onScroll();
+
+  // ====== TradingView lightweight chart fallback ======
+  // Embed the TradingView widget for ACH
+  (function(){
+    const target = document.getElementById('tv-chart');
+    if(!target) return;
+    target.innerHTML = '<div class="tradingview-widget-container__widget" style="height:100%;width:100%;"></div>';
+    const s = document.createElement('script');
+    s.type='text/javascript';
+    s.async = true;
+    s.src='https://s3.tradingview.com/external-embedding/embed-widget-symbol-overview.js';
+    s.innerHTML = JSON.stringify({
+      "symbols":[["NYSE:ACH|1Y"]],
+      "chartOnly":false,
+      "width":"100%",
+      "height":"100%",
+      "locale":"en",
+      "colorTheme":"dark",
+      "autosize":true,
+      "showVolume":false,
+      "showMA":false,
+      "hideDateRanges":false,
+      "hideMarketStatus":false,
+      "hideSymbolLogo":false,
+      "scalePosition":"right",
+      "scaleMode":"Normal",
+      "fontFamily":"Inter, sans-serif",
+      "fontSize":"10",
+      "noTimeScale":false,
+      "valuesTracking":"1",
+      "changeMode":"price-and-percent",
+      "chartType":"area",
+      "lineColor":"rgb(94, 234, 212)",
+      "topColor":"rgba(94,234,212,0.3)",
+      "bottomColor":"rgba(94,234,212,0)",
+      "lineWidth":2,
+      "lineType":0,
+      "dateRanges":["1d|1","1m|30","3m|60","12m|1D","60m|1W","all|1M"]
+    });
+    target.appendChild(s);
+  })();
+
+  // ====== Chart.js global config ======
+  Chart.defaults.font.family = "Inter, sans-serif";
+  Chart.defaults.color = '#a8b3cf';
+  Chart.defaults.borderColor = '#1f2a44';
+
+  // ===== Revenue / EBITDA / FCF =====
+  new Chart(document.getElementById('rev-chart'), {
+    type:'bar',
+    data:{
+      labels:['2022','2023','2024','2025','2026E','2027E'],
+      datasets:[
+        {label:'Revenue (Patient Direct)', data:[2057,2553,2680,2762,2609,2726], backgroundColor:'rgba(56,189,248,0.45)', borderColor:'#38bdf8', borderWidth:1, borderRadius:4, yAxisID:'y'},
+        {label:'Adj. EBITDA', data:[544,526,523,375,343,387], type:'line', borderColor:'#5eead4', backgroundColor:'rgba(94,234,212,0.18)', tension:.35, borderWidth:3, pointBackgroundColor:'#5eead4', pointRadius:5, fill:true, yAxisID:'y'},
+        {label:'Free Cash Flow', data:[158,533,-89,-303,105,96], type:'line', borderColor:'#a78bfa', backgroundColor:'rgba(167,139,250,.15)', tension:.35, borderWidth:3, pointBackgroundColor:'#a78bfa', pointRadius:5, borderDash:[6,4], yAxisID:'y'}
+      ]
+    },
+    options:{
+      maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom'}, tooltip:{callbacks:{label:c=>c.dataset.label+': $'+c.parsed.y+'M'}}},
+      scales:{
+        y:{title:{display:true,text:'$M'}, grid:{color:'rgba(255,255,255,.05)'}},
+        x:{grid:{display:false}}
+      }
+    }
+  });
+
+  // ===== Margin chart =====
+  new Chart(document.getElementById('margin-chart'), {
+    type:'line',
+    data:{
+      labels:['2022','2023','2024','2025','2026E','2027E'],
+      datasets:[
+        {label:'Adj. EBITDA Margin', data:[5.5,5.1,4.9,13.6,13.2,14.2], borderColor:'#5eead4', backgroundColor:'rgba(94,234,212,.08)', tension:.4, borderWidth:3, pointRadius:5, fill:true},
+        {label:'Gross Margin (Patient Direct)', data:[null,null,null,46.7,46.8,47.0], borderColor:'#38bdf8', backgroundColor:'rgba(56,189,248,.03)', tension:.3, borderWidth:2, pointRadius:4, borderDash:[4,4]},
+        {label:'FCF Margin', data:[1.6,5.2,-0.8,-3.0,4.0,3.5], borderColor:'#a78bfa', backgroundColor:'rgba(167,139,250,.06)', tension:.4, borderWidth:2, pointRadius:4}
+      ]
+    },
+    options:{
+      maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom'}, tooltip:{callbacks:{label:c=>c.dataset.label+': '+c.parsed.y+'%'}}},
+      scales:{ y:{title:{display:true,text:'%'}, ticks:{callback:v=>v+'%'}, grid:{color:'rgba(255,255,255,.05)'}}, x:{grid:{display:false}} }
+    }
+  });
+
+  // ===== Revenue by category =====
+  new Chart(document.getElementById('cat-chart'),{
+    type:'bar',
+    data:{
+      labels:['2023','2024','2025','2026E','2027E'],
+      datasets:[
+        {label:'Diabetes', data:[740,789,796,765,788], backgroundColor:'#5eead4'},
+        {label:'Sleep Therapy', data:[664,694,737,705,747], backgroundColor:'#38bdf8'},
+        {label:'Home Respiratory', data:[434,443,440,380,387], backgroundColor:'#a78bfa'},
+        {label:'Ostomy', data:[179,189,204,177,190], backgroundColor:'#facc15'},
+        {label:'Wound Care', data:[153,190,190,180,180], backgroundColor:'#fb923c'},
+        {label:'Urology', data:[102,106,116,116,127], backgroundColor:'#f472b6'},
+        {label:'Other', data:[281,269,287,287,307], backgroundColor:'#475569'}
+      ]
+    },
+    options:{
+      maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom'}, tooltip:{callbacks:{label:c=>c.dataset.label+': $'+c.parsed.y+'M'}}},
+      scales:{
+        x:{stacked:true, grid:{display:false}},
+        y:{stacked:true, title:{display:true,text:'$M'}, grid:{color:'rgba(255,255,255,.05)'}}
+      }
+    }
+  });
+
+  // ===== Net leverage chart =====
+  new Chart(document.getElementById('lev-chart'),{
+    type:'line',
+    data:{
+      labels:['2022','2023','2024','2025','2026E','2027E','Target'],
+      datasets:[{
+        label:'Net Leverage (x)',
+        data:[4.6,4.0,3.5,4.7,5.1,4.3,3.0],
+        borderColor:'#facc15',
+        backgroundColor:'rgba(250,204,21,.08)',
+        tension:.4, fill:true, borderWidth:3, pointBackgroundColor:'#facc15', pointRadius:5
+      }]
+    },
+    options:{
+      maintainAspectRatio:false,
+      plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>c.parsed.y+'x'}}},
+      scales:{ y:{title:{display:true,text:'Net Debt / Adj EBITDA'}, ticks:{callback:v=>v+'x'}, grid:{color:'rgba(255,255,255,.05)'}}, x:{grid:{display:false}} }
+    }
+  });
+
+  // ====== Map tooltips ======
+  const usMap = document.querySelector('.us-map');
+  if(usMap){
+    let tip = document.createElement('div');
+    tip.style.cssText='position:fixed;pointer-events:none;background:#0d1220;border:1px solid #1f2a44;color:#e6edff;padding:8px 12px;border-radius:6px;font-size:12px;z-index:1000;display:none;';
+    document.body.appendChild(tip);
+    usMap.querySelectorAll('path').forEach(p=>{
+      p.addEventListener('mouseenter',e=>{
+        tip.innerHTML = `<strong>${p.dataset.name}</strong><br>~${p.dataset.locs} sites`;
+        tip.style.display='block';
+      });
+      p.addEventListener('mousemove',e=>{
+        tip.style.left=(e.clientX+14)+'px';
+        tip.style.top=(e.clientY+14)+'px';
+      });
+      p.addEventListener('mouseleave',()=>tip.style.display='none');
+    });
+  }
+</script>
+
+</body>
+</html>
